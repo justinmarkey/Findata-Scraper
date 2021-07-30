@@ -5,10 +5,10 @@ import yfinance as yf
 import statistics as s
 import concurrent.futures #MIGHT NOT NEED THREADS FOR THESE OPERATIONS
 
-nasdaq = pd.read_csv("nasdaq.csv")
-nyse = pd.read_csv("nyse.csv")
-amex = pd.read_csv("amex.csv")
-dirtydata = pd.concat([nasdaq, nyse, amex], ignore_index=True)
+nasdaq = pd.read_csv("./exchangestocks/nasdaq.csv")
+nyse = pd.read_csv("./exchangestocks/nyse.csv")
+amex = pd.read_csv("./exchangestocks/amex.csv")
+dirtydata = pd.concat([nasdaq, nyse, amex], ignore_index=True) #ignore index cuz all indicies the same
 
 balancesheetref = (
     "Intangible Assets",
