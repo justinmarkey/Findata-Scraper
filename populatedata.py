@@ -12,6 +12,7 @@ from csvdataframe import financialsref
 from nullticker import emptytickers
 #TEMP FOR TESTING
 maindf = pd.read_csv("stockdata.csv")
+
 maindf = maindf.set_index('Symbol')
 
 nodata = []
@@ -151,7 +152,7 @@ def initthreads(method):
     
     with concurrent.futures.ThreadPoolExecutor() as exe:
         t1 = t.time()
-        exe.map(method, bigsymbollist)  #use bigsymbollist when doing entire set
+        exe.map(method, medsymbollist)  #use bigsymbollist when doing entire set
 
     maindf.reset_index() #THIS IS UNSETTING 'SYMBOL' IN INDEX AND PUTTING IT BACK AS COLUMN! IMPORTANT FOR REPEATING
     maindf.to_csv("finaldb1.csv") # index=False optional arg
