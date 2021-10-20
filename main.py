@@ -1,17 +1,19 @@
-import yfinance as yf
 
+import yfinance as yf
+import requests_cache
+import time as t 
+stocklist = ['aapl', 'tsla']
+
+
+
+# The scraped response will be stored in the cache
 
 #calc sector avgs
-symbol = "hd" #aapl #abgi
+#symbol = "aapl" #aapl #abgi
 
-
-def send(symbol):
-    a = yf.Ticker(symbol)
-
-    print (a.balance_sheet)
     
-    
-    #recieve 3.2 1.5 Mbps
 if __name__ == '__main__':
-    #send(symbol)
-    pass
+    t1 =t.time()
+    
+    t2 = t.time()
+    print(t2-t1)
