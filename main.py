@@ -1,6 +1,5 @@
 
 import yfinance as yf
-import requests_cache
 import time as t 
 stocklist = ['aapl', 'tsla']
 

@@ -1,8 +1,12 @@
 #essential basics
 
+from typing import List, Tuple
+import numpy as np
+
 import pandas as pd
 import statistics as s
 from scipy import stats
+
 
 #references to other py files
 from csvdataframe import balancesheetref, financialsref, cashflowref, earningsref, everyref
@@ -14,18 +18,18 @@ import matplotlib.pyplot as plt
 #utilities
 import time as t
 
-
+# Import the data
 findata = pd.read_csv('normalizeddb.csv')
 
-
-def get_sectors() -> int:
+### Helper functions for Pandas
+def get_sectors():
     return pd.unique(findata['Sector'])
 
-def get_industries() -> int:
+def get_industries():
     return pd.unique(findata['Industry'])
 
 def get_dict() -> dict:
-        
+
     """
     returns a dict with the key being the sector, and the values being each industry in that sector
     """
@@ -51,6 +55,12 @@ def get_num_of_tickers(sector: str, industry: bool = False) -> int:
     else:
         return len (findata[findata['Sector'] == sector])
 
+def find_ticker_by_index(data: pd.DataFrame, index: int) -> str:
+    return data.at[index, 'Symbol']
+
+
+### STATS
+
 def shapiro_testing_sector(sector: str, element: str) -> None:
     data_filter = findata[findata["Sector"] == sector]
 
@@ -67,29 +77,68 @@ def shapiro_testing_industry(industry: str, element: str) -> None:
     stat = stats.shapiro(data)
     print(stat)
 
-def find_ticker(data: pd.DataFrame, index: int) -> str:
-    return data.at[index, 'Symbol']
+def sector_attrs(sector: str, element: str):
+    """
+    returns log mean, coeff added to transform to positive data (based on min of dataset), logged datapoints
+    """
 
-def sector_mu(sector: str, element: str) -> None:
-    
     data_filter = findata.filter(items=[sector, element])
+    coeff = min (data_filter[element])
+    
+    coeff = np.abs(coeff)+1
+    
+    ignored_zero =[np.log(x+coeff) for x in data_filter[element] if x != 0]
+    
 
-    ignored_zero =[x for x in data_filter[element] if x != 0] #get index for n==0
+    log_mu = s.fmean(ignored_zero) #calc mean for untransformed data. 
     
-    mu = s.mean(ignored_zero) #calc mean for non zeor 
-    for index in data_filter.index:
-        data_filter.at[index,element] = mu
+    idx = 0
+    for i in data_filter[element]: #settings the transformations and logs each data point
+        
+        if i == 0:
+            data_filter.at[idx, element] = log_mu  #transmutation of zero's by the mean
+        else:
+            data_filter.at[idx, element] = np.log(data_filter.at[idx, element] + coeff)
 
-    return s.mean(data_filter[element])
+        idx += 1
+
     
-def show_scatterplot(data: pd.DataFrame, sector: str,element: str):
+    return (log_mu , coeff, data_filter)
+
+def zscore_logged_data(sector: str, element: str):
+    """
+    The goal of this is to capture the outliers
+    """
+    attrs = sector_attrs(sector, element)
     
-    #sns.scatterplot(data = data.filter(items=[sector, element]), x=data.index, y=element)
-    # plt.show()
-    sns.boxplot(data = data.filter(items=[sector, element]))
+    log_data = attrs[2]
+    zscores = stats.zscore(log_data)
+    std = s.stdev(log_data)
+    return (zscores,std)
+
+def outliers (sector: str, element: str):
+    """
+    
+    """
+    zscore_data = zscore_logged_data(sector, element)
+    std = zscore_data[1]
+    zscore_data = zscore_data[0]
+
+    zscore_data = pd.DataFrame(zscore_data)
+    zscore_data.insert(0, "Symbol", findata["Symbol"])
+    
+    zscore_data.sort_values ("Net Income", inplace=True)
+    
+    return (zscore_data, std)
+
+
+
+
+def show_scatterplot(data: pd.DataFrame, sector: str, element: str):
+    sns.scatterplot(data = data.filter(items=[sector, element]), x=data.index, y=element)
     plt.show()
+
 if __name__ == '__main__':
-    find_ticker(findata, 4120)
-    show_scatterplot(findata,'Finance', 'Cash')
-    
+
+    outliers("Miscellaneous", "Net Income")
 #                          cd Projects/Python/'.\BalanceSheet Parser\'

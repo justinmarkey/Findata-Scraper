@@ -1,14 +1,11 @@
 import concurrent.futures
 import pandas as pd
-from pandas.core.indexes.base import Index
+
 import yfinance as yf
 import numpy as np
 import time as t
-from csvdataframe import balancesheetref
-from csvdataframe import cashflowref
-from csvdataframe import earningsref
-from csvdataframe import financialsref
-from csvdataframe import everyref
+from csvdataframe import balancesheetref, cashflowref, earningsref, financialsref, everyref
+
 import requests_cache
 #TEMP FOR TESTING
 maindf = pd.read_csv("stockdata.csv")
@@ -57,12 +54,12 @@ def settingcashflowdata(symbol, cashflow, i):
     except KeyError:
         return None
 
-def test(symbol):
+def bulkdownload(symbol):
 
     '''
     bulk download of the data
     '''
-    stock = yf.Ticker(symbol,session=session)
+    stock = yf.Ticker(symbol ,session=session)
     try:
         if stock.info['financialCurrency'] != 'USD':
             foreign.append(symbol) # we only want usd so that we can normalize the data
@@ -71,7 +68,7 @@ def test(symbol):
             financials = stock.financials
             cashflow = stock.cashflow
             sheet = stock.balance_sheet 
-            #financials 
+            #financials
             if financials.size == 0 or cashflow.size == 0: #checking if the request returns no data
                 nodata.append(symbol)
             for i in financialsref:
@@ -89,7 +86,7 @@ def test(symbol):
         pass
     t.sleep(6)
 
-def initthreads(method, stocklist: list):
+def threadhandler(method, stocklist: list):
     
     with concurrent.futures.ThreadPoolExecutor() as exe:
         t1 = t.time()
@@ -107,7 +104,7 @@ def initthreads(method, stocklist: list):
     
 def normalizedf():
     '''
-    normalize each value by equity. makes it into a ratio. 
+    normalize each value by equity. making a ratio for each reporting elements. 
     '''
     findata = pd.read_csv("finaldb.csv")
 
