@@ -170,14 +170,13 @@ def addcolumns():
     used to prepopulate df with columns and zeros so we can easily make changes to it in the future
     '''
     cleaneddata = pd.read_csv('stockdata.csv')
-
+    
     for i in everyref:
         cleaneddata[i] = np.zeros(len(cleaneddata))
 
     print(cleaneddata)
     cleaneddata.reset_index(drop=True)
     cleaneddata.to_csv('stockdata.csv', index=False)
-
 #maindf = pd.read_csv('stockdata.csv') 
 
 #clean(dirtydata)

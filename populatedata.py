@@ -128,7 +128,7 @@ def normalizedf():
                 findata.at[idx, i] = ratio
                 idx += 1
 
-    findata.reset_index()
+    #findata.reset_index() ?
     findata.to_csv("normalizeddb.csv", index=False)
 
 if __name__ == '__main__':

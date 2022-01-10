@@ -82,7 +82,8 @@ def sector_attrs(sector: str, element: str):
     returns log mean, coeff added to transform to positive data (based on min of dataset), logged datapoints
     """
 
-    data_filter = findata.filter(items=[sector, element])
+    data_filter = findata.filter(items=["Symbol", sector, element])
+    
     coeff = min (data_filter[element])
     
     coeff = np.abs(coeff)+1
@@ -102,8 +103,10 @@ def sector_attrs(sector: str, element: str):
 
         idx += 1
 
-    
+
     return (log_mu , coeff, data_filter)
+
+
 
 def zscore_logged_data(sector: str, element: str):
     """
@@ -112,33 +115,34 @@ def zscore_logged_data(sector: str, element: str):
     attrs = sector_attrs(sector, element)
     
     log_data = attrs[2]
-    zscores = stats.zscore(log_data)
-    std = s.stdev(log_data)
-    return (zscores,std)
+    
+    
+    log_data[element] = stats.zscore(log_data[element]) #set column to z scores
+    
+    return (log_data) # returns zscored data and stdev
+
+
 
 def outliers (sector: str, element: str):
     """
-    
+    involves putting the data back into a matched dataframe with symbols for each z score value.
     """
     zscore_data = zscore_logged_data(sector, element)
-    std = zscore_data[1]
-    zscore_data = zscore_data[0]
 
-    zscore_data = pd.DataFrame(zscore_data)
-    zscore_data.insert(0, "Symbol", findata["Symbol"])
+    # Sorting algorithm
+    negative_zscores = zscore_data.sort_values(by = element, ascending=True)
     
-    zscore_data.sort_values ("Net Income", inplace=True)
-    
-    return (zscore_data, std)
+    positive_zscores = zscore_data.sort_values(by = element, ascending=False)
 
-
-
+    return (negative_zscores, positive_zscores)
 
 def show_scatterplot(data: pd.DataFrame, sector: str, element: str):
     sns.scatterplot(data = data.filter(items=[sector, element]), x=data.index, y=element)
     plt.show()
 
 if __name__ == '__main__':
-
+    
     outliers("Miscellaneous", "Net Income")
+
+    #outliers("Miscellaneous", "Net Income")
 #                          cd Projects/Python/'.\BalanceSheet Parser\'
