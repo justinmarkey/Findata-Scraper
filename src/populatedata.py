@@ -8,7 +8,7 @@ from csvdataframe import balancesheetref, cashflowref, earningsref, financialsre
 
 import requests_cache
 #TEMP FOR TESTING
-maindf = pd.read_csv("stockdata.csv")
+maindf = pd.read_csv("../data/stockdata.csv")
 maindf = maindf.set_index('Symbol')
 
 medsymbollist = maindf.index[:24]
@@ -60,30 +60,29 @@ def bulkdownload(symbol):
     bulk download of the data
     '''
     stock = yf.Ticker(symbol ,session=session)
-    try:
-        if stock.info['financialCurrency'] != 'USD':
-            foreign.append(symbol) # we only want usd so that we can normalize the data
-        else:
-            earnings = stock.earnings
-            financials = stock.financials
-            cashflow = stock.cashflow
-            sheet = stock.balance_sheet 
-            #financials
-            if financials.size == 0 or cashflow.size == 0: #checking if the request returns no data
-                nodata.append(symbol)
-            for i in financialsref:
-                settingfinancialdata(symbol, financials, i)
-            #cashflow   
-            for i in cashflowref:
-                settingcashflowdata(symbol, cashflow, i)
-            #sheet  
-            for i in balancesheetref:
-                settingbalancesheetdata(symbol, sheet, i)
-            #earnings (the columns and rows are swapped for this yfinance call so we use no ".loc" when selecting columns)
-            for i in earningsref:
-                settingearningsdata(symbol, earnings, i)
-    except KeyError:
-        pass
+    if stock.info['financialCurrency'] != 'USD':
+        foreign.append(symbol) # we only want usd so that we can normalize the data
+    else:
+        earnings = stock.earnings
+
+        financials = stock.financials
+        cashflow = stock.cashflow
+        sheet = stock.balance_sheet 
+        #financials
+        if financials.size == 0 or cashflow.size == 0: #checking if the request returns no data
+            nodata.append(symbol)
+        for i in financialsref:
+            settingfinancialdata(symbol, financials, i)
+        #cashflow   
+        for i in cashflowref:
+            settingcashflowdata(symbol, cashflow, i)
+        #sheet  
+        for i in balancesheetref:
+            settingbalancesheetdata(symbol, sheet, i)
+        #earnings (the columns and rows are swapped for this yfinance call so we use no ".loc" when selecting columns)
+        for i in earningsref:
+            settingearningsdata(symbol, earnings, i)
+
     t.sleep(6)
 
 def threadhandler(method, stocklist: list):
@@ -106,7 +105,7 @@ def normalizedf():
     '''
     normalize each value by equity. making a ratio for each reporting elements. 
     '''
-    findata = pd.read_csv("finaldb.csv")
+    findata = pd.read_csv("../data/finaldb.csv")
 
     zeroequity = findata[findata['Total Stockholder Equity'].eq(0)]
     
@@ -120,7 +119,7 @@ def normalizedf():
             continue
         else:
             idx = 0
-            equity = findata.at [idx, 'Total Stockholder Equity'] #getting equity value
+            equity = findata.at [idx,'Total Stockholder Equity'] #getting equity value
 
             for x in findata[i]: # elements in each column
 
@@ -129,7 +128,7 @@ def normalizedf():
                 idx += 1
 
     #findata.reset_index() ?
-    findata.to_csv("normalizeddb.csv", index=False)
+    findata.to_csv("../data/normalizeddb.csv", index=False)
 
 if __name__ == '__main__':
     pass

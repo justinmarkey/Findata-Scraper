@@ -1,9 +1,9 @@
 import pandas as pd
 import numpy as np
 
-nasdaq = pd.read_csv("./exchangestocks/nasdaq.csv")
-nyse = pd.read_csv("./exchangestocks/nyse.csv")
-amex = pd.read_csv("./exchangestocks/amex.csv")
+nasdaq = pd.read_csv("../exchangestocks/nasdaq.csv")
+nyse = pd.read_csv("../exchangestocks/nyse.csv")
+amex = pd.read_csv("../exchangestocks/amex.csv")
 dirtydata = pd.concat([nasdaq, nyse, amex], ignore_index=True) #ignore index cuz all indicies the same
 
 balancesheetref = (
@@ -163,20 +163,20 @@ def clean(dirtydata):
         dirtydata.drop(i, inplace=True)
 
     dirtydata = dirtydata.reset_index(drop=True)
-    dirtydata.to_csv('stockdata.csv', index=False)
+    dirtydata.to_csv('../data/stockdata.csv', index=False)
 
 def addcolumns():
     '''
     used to prepopulate df with columns and zeros so we can easily make changes to it in the future
     '''
-    cleaneddata = pd.read_csv('stockdata.csv')
+    cleaneddata = pd.read_csv('../data/stockdata.csv')
     
     for i in everyref:
         cleaneddata[i] = np.zeros(len(cleaneddata))
 
     print(cleaneddata)
     cleaneddata.reset_index(drop=True)
-    cleaneddata.to_csv('stockdata.csv', index=False)
+    cleaneddata.to_csv('../data/stockdata.csv', index=False)
 #maindf = pd.read_csv('stockdata.csv') 
 
 #clean(dirtydata)
