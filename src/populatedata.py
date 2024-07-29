@@ -4,102 +4,137 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 import time as t
-from csvdataframe import balancesheetref, cashflowref, earningsref, financialsref, everyref
+from columnreferences import *
 
 import requests_cache
-#TEMP FOR TESTING
-maindf = pd.read_csv("../data/stockdata.csv")
-maindf = maindf.set_index('Symbol')
 
-medsymbollist = maindf.index[:24]
-bigsymbollist = maindf.index
+financials_df = pd.read_csv("../data/stockdata.csv")
+financials_df = financials_df.set_index('Symbol')
+
+stockinfo_df = pd.read_csv("../data/stockdata.csv")
+stockinfo_df = stockinfo_df.set_index('Symbol')
+
+medsymbollist = financials_df.index[:24]
+bigsymbollist = financials_df.index
 
 session = requests_cache.CachedSession('yfinance.cache')
 session.headers['User-agent'] = 'balancesheetparser'
 
-nodata = []
-foreign = []
 
-def settingfinancialdata(symbol, financials, i):
+def setting_financial_data(symbol, financials, ref):
     try:
-        f = financials.loc[i]   
+        f = financials.loc[ref]   
         if f.isnull().any() == False: #check if the data has any NaN or None
-            maindf.at[symbol, i] = np.mean(f)
+            financials_df.at[symbol, ref] = np.mean(f)
             return None
     except KeyError:
         return None
-def settingearningsdata(symbol, earnings, i):
+    
+    
+
+def setting_earnings_data(symbol, earnings, ref):
     try:
-        e = earnings[i]
+        e = earnings[ref]
         print(f'{e}\n{symbol}') #to know if its delivering consistant data and not empty dfs    
         if e.isnull().any() == False: #check if the the data has any NaN or None #IMPORTANT some have size with NaN!
-            maindf.at[symbol, i] = np.mean(e)
+            financials_df.at[symbol, ref] = np.mean(e)
             return None
     except KeyError:
         return None
-def settingbalancesheetdata(symbol, sheet, i):
+
+
+
+
+def setting_balancesheet_data(symbol, sheet, ref):
     try:
-        b = sheet.loc[i]    
+        b = sheet.loc[ref]    
         if b.isnull().any() == False:
-            maindf.at[symbol, i] = np.mean(b)
+            financials_df.at[symbol, ref] = np.mean(b)
             return None 
     except KeyError:
         return None
-def settingcashflowdata(symbol, cashflow, i):
+
+    
+def setting_cashflow_data(symbol, cashflow, ref):
     try:
-        c = cashflow.loc[i] 
+        c = cashflow.loc[ref] 
         if c.isnull().any() == False: 
-            maindf.at[symbol, i] = np.mean(c)
+            financials_df.at[symbol, ref] = np.mean(c)
             return None
     except KeyError:
         return None
+
+def setting_tickerinfo_data(symbol, info, ref):
+    try:
+        i = info.values().loc[ref]
+        stockinfo_df.at[symbol, ref] = i
+        return None
+    except KeyError:
+        return None
+
+nonUSD_symbols = []
+nodata_symbols = []
 
 def bulkdownload(symbol):
 
     '''
     bulk download of the data
     '''
-    stock = yf.Ticker(symbol ,session=session)
+    
+    stock = yf.Ticker(symbol, session=session)
+    
+    #confirm USD denominated securities
     if stock.info['financialCurrency'] != 'USD':
-        foreign.append(symbol) # we only want usd so that we can normalize the data
+        nonUSD_symbols.append(symbol)
+    
+    #confirm if data returned from API is 0  
+    elif financials.size == 0 or cashflow.size == 0: #checking if the request returns no data
+        nodata_symbols.append(symbol)
+
     else:
         earnings = stock.earnings
-
         financials = stock.financials
         cashflow = stock.cashflow
-        sheet = stock.balance_sheet 
-        #financials
-        if financials.size == 0 or cashflow.size == 0: #checking if the request returns no data
-            nodata.append(symbol)
-        for i in financialsref:
-            settingfinancialdata(symbol, financials, i)
+        sheet = stock.balance_sheet
+        info = stock.info
+
+        for ref in inforef:
+            setting_tickerinfo_data(symbol, info, ref)
+            
+
+        for ref in financialsref:
+            setting_financial_data(symbol, financials, ref)
         #cashflow   
-        for i in cashflowref:
-            settingcashflowdata(symbol, cashflow, i)
+        for ref in cashflowref:
+            setting_cashflow_data(symbol, cashflow, ref)
         #sheet  
-        for i in balancesheetref:
-            settingbalancesheetdata(symbol, sheet, i)
+        for ref in balancesheetref:
+            setting_balancesheet_data(symbol, sheet, ref)
         #earnings (the columns and rows are swapped for this yfinance call so we use no ".loc" when selecting columns)
-        for i in earningsref:
-            settingearningsdata(symbol, earnings, i)
+        for ref in earningsref:
+            setting_earnings_data(symbol, earnings, ref)
 
     t.sleep(6)
 
-def threadhandler(method, stocklist: list):
+
+
+def threadhandler(method, stocklist):
     
     with concurrent.futures.ThreadPoolExecutor() as exe:
         t1 = t.time()
         exe.map(method, stocklist)  #use bigsymbollist when doing entire set
 
      #THIS IS UNSETTING 'SYMBOL' IN INDEX AND PUTTING IT BACK AS COLUMN! IMPORTANT FOR REPEATING
-    for i in nodata: #clear out the empty's
-        maindf.drop(i, inplace = True)
+    for i in nodata_symbols: #clear out the empty's
+        financials_df.drop(i, inplace = True)
 
-    maindf.reset_index()
-    #maindf.to_csv("finaldb1.csv") # index=False optional arg
-    #maindf.to_csv("backupfinaldb.csv") #extra just in case you mess up the first one :}
+    financials_df.reset_index()
+    #main_df.to_csv("finaldb1.csv") # index=False optional arg
+    #main_df.to_csv("backupfinaldb.csv") #extra just in case you mess up the first one :}
     t2 = t.time()
     print(f'Took about --> {t2-t1} seconds')
+    
+    
     
 def normalizedf():
     '''
@@ -130,5 +165,8 @@ def normalizedf():
     #findata.reset_index() ?
     findata.to_csv("../data/normalizeddb.csv", index=False)
 
-if __name__ == '__main__':
+
+def nh ():
     pass
+
+

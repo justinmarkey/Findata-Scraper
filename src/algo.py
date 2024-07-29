@@ -136,8 +136,6 @@ class logged_norm():
 
 ### STATS
 
-
-
 if __name__ == '__main__':
     pass
     # sector = "Miscellaneous"

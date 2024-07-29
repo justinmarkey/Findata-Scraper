@@ -1,18 +1,9 @@
+import timeit
 
-import yfinance as yf
-import time as t 
-stocklist = ['aapl', 'tsla']
+def main ():
+    x: int = 5
 
 
-
-# The scraped response will be stored in the cache
-
-#calc sector avgs
-#symbol = "aapl" #aapl #abgi
-
-    
 if __name__ == '__main__':
-    t1 =t.time()
-    
-    t2 = t.time()
-    print(t2-t1)
+
+        print('\t', timeit.timeit()))
