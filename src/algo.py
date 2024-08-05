@@ -1,20 +1,13 @@
-#essential basics
-
 import numpy as np
-
 import pandas as pd
 import statistics as s
 from scipy import stats
 
-
-#references to other py files
 from csvdataframe import balancesheetref, financialsref, cashflowref, earningsref, everyref
 
-#data display
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#utilities
 import time as t
 
 # Import the data

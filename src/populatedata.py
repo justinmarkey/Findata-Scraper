@@ -17,7 +17,7 @@ stockinfo_df = stockinfo_df.set_index('Symbol')
 medsymbollist = financials_df.index[:24]
 bigsymbollist = financials_df.index
 
-session = requests_cache.CachedSession('yfinance.cache')
+session = requests_cache.CachedSession('yfinance.cache', backend='sqlite', expire_after=3600)
 session.headers['User-agent'] = 'balancesheetparser'
 
 
@@ -31,7 +31,6 @@ def setting_financial_data(symbol, financials, ref):
         return None
     
     
-
 def setting_earnings_data(symbol, earnings, ref):
     try:
         e = earnings[ref]
@@ -41,8 +40,6 @@ def setting_earnings_data(symbol, earnings, ref):
             return None
     except KeyError:
         return None
-
-
 
 
 def setting_balancesheet_data(symbol, sheet, ref):
@@ -64,6 +61,7 @@ def setting_cashflow_data(symbol, cashflow, ref):
     except KeyError:
         return None
 
+
 def setting_tickerinfo_data(symbol, info, ref):
     try:
         i = info.values().loc[ref]
@@ -72,10 +70,11 @@ def setting_tickerinfo_data(symbol, info, ref):
     except KeyError:
         return None
 
+
 nonUSD_symbols = []
 nodata_symbols = []
 
-def bulkdownload(symbol):
+def bulkdownload(symbol, sleepTimer: int = 6):
 
     '''
     bulk download of the data
@@ -114,7 +113,8 @@ def bulkdownload(symbol):
         for ref in earningsref:
             setting_earnings_data(symbol, earnings, ref)
 
-    t.sleep(6)
+    #to avoid exhausting the Yahoo Finance API limit. 6 seconds seems to be
+    t.sleep(sleepTimer)
 
 
 
@@ -124,7 +124,7 @@ def threadhandler(method, stocklist):
         t1 = t.time()
         exe.map(method, stocklist)  #use bigsymbollist when doing entire set
 
-     #THIS IS UNSETTING 'SYMBOL' IN INDEX AND PUTTING IT BACK AS COLUMN! IMPORTANT FOR REPEATING
+     #THIS IS UNSETTING 'SYMBOL' IN INDEX AND PUTTING IT BACK AS COLUMN. IMPORTANT FOR REPEATING
     for i in nodata_symbols: #clear out the empty's
         financials_df.drop(i, inplace = True)
 
@@ -133,7 +133,6 @@ def threadhandler(method, stocklist):
     #main_df.to_csv("backupfinaldb.csv") #extra just in case you mess up the first one :}
     t2 = t.time()
     print(f'Took about --> {t2-t1} seconds')
-    
     
     
 def normalizedf():
@@ -150,9 +149,8 @@ def normalizedf():
     findata = findata.reset_index(drop=True)
 
     for i in everyref: # columns
-        if i == 'Total Stockholder Equity': # dont want to normalize total stockholder equity by itself :}
-            continue
-        else:
+        if i != 'Total Stockholder Equity':
+
             idx = 0
             equity = findata.at [idx,'Total Stockholder Equity'] #getting equity value
 
@@ -165,8 +163,5 @@ def normalizedf():
     #findata.reset_index() ?
     findata.to_csv("../data/normalizeddb.csv", index=False)
 
-
-def nh ():
-    pass
-
-
+    n(x) - looping for columns, dictionary the column with the row elements, 
+    x^2 - double for loop
