@@ -76,18 +76,16 @@ def get_current_stocklist():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     target_download_dir = f"{current_dir}/../data/exchangelistcsv"
 
-    
     if not os.path.exists(target_download_dir):
         os.makedirs(target_download_dir)
     
-    path_csv_files = glob.glob(f"{target_download_dir}/nasdaq_")
-    print(path_csv_files)
+    path_csv_files = glob.glob(f"{target_download_dir}/nasdaq_*")
+    
     #cleaning the target download directory
     for csv_file in path_csv_files:
-        print(csv_file) 
         if os.path.exists(csv_file):
             os.remove(csv_file)
-            print("removed")
+            
     
     fetch_nasdaq_stocklist(target_download_dir)
     rename_downloaded_csv(target_download_dir)
