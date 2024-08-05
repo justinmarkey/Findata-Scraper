@@ -1,38 +1,52 @@
 import pandas as pd
 import glob
 import os
-import numpy as np
+
 from columnreferences import *
 
+def findcsv(glob_pathern: str = "nasdaq_*") -> str:
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_file_dir = f"{current_dir}/../data/exchangelistcsv"
+    glob_pattern = "nasdaq_*"
+
+    csv_filename = glob.glob(f"{csv_file_dir}/{glob_pattern}")[0]
+
+    return(csv_filename)
 
 def cleandata():
 
     #find csv file name
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_file_dir = f"{current_dir}/../data/exchangelistcsv"
+    csv_filename = findcsv()
+    stock_df = pd.read_csv(csv_filename)
     
-    csv_file = glob.glob(f"{csv_file_dir}/nasdaq_")
-
-    stock_df = pd.read_csv(csv_file)
+    #Drop columns that are unnecessary
+    stock_df = stock_df.drop(columns=[x for x in newcsv_dropref])
     
-    zerodroplist = stock_df[stock_df['Market Cap'].eq(0)] #get rid of zeros in marketcap
-    stock_df = stock_df.drop (zerodroplist.index)
-    print (f"\n{len(zerodroplist)} tickers had no specified Market Cap size\n")
+    #Drop zero marketcap securities
+    zero_Marketcap_droplist = stock_df[stock_df['Market Cap'].eq(0)] #get rid of zeros in marketcap
+    stock_df = stock_df.drop (zero_Marketcap_droplist.index)
+    print (f"\n{len(zero_Marketcap_droplist)} tickers had no specified Market Cap size\n")
 
-    nandroplist = stock_df[stock_df.isnull().any(axis=1)] #get rid of NaN in any of the columns
-    stock_df = stock_df.drop (nandroplist.index)
-    print (f"{len(nandroplist)} tickers had no specified Sector or industry \n")
+    #Drop securites with NaN in the data
+    NaN_droplist = stock_df[stock_df.isnull().any(axis=1)] #get rid of NaN in any of the columns
+    stock_df = stock_df.drop (NaN_droplist.index)
+    print (f"{len(NaN_droplist)} tickers had no specified Sector or Industry \n")
 
-    #create df with financial colummns
+    #create stock data df with financial colummns
     financialcolumns_df = pd.DataFrame(columns=everyref)
     financials_df = pd.concat([stock_df,financialcolumns_df], axis=1)
 
+    #create stock info df with inforef columns
     infocolumns_df = pd.DataFrame(columns=inforef)
     stockinfo_df = pd.concat([stock_df,infocolumns_df], axis=1)
 
+    #reset the index on the df's
     financials_df.reset_index(drop=True)
     stockinfo_df.reset_index(drop=True)
 
-    print (financials_df)
+    #convert into csv
     financials_df.to_csv('data/stockdata.csv', index=False)
     stockinfo_df.to_csv('data/stockinfo.csv', index=False)
+
+cleandata()

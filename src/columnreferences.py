@@ -205,6 +205,15 @@ inforef = (
     'trailingPegRatio'
 )
 
+newcsv_dropref = (
+    "Last Sale",
+    "Net Change",
+    "% Change",
+    "Country",
+    "IPO Year",
+    "Volume",
+)
+
 everyref = (
     "Intangible Assets",
     "Capital Surplus",
