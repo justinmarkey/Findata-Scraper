@@ -1,12 +1,5 @@
 import yfinance as yf
 
-balancesheetref = None
-financialsref = None
-cashflowref = None
-everyref = None
-
-inforef = None
-
 newcsv_dropref = (
     "Name",
     "Last Sale",
@@ -18,7 +11,14 @@ newcsv_dropref = (
 )
 
 def get_col_refs():
+    print("printing")
     stock = yf.Ticker("AAPL")
+
+    global balancesheetref
+    global financialsref
+    global cashflowref
+    global everyref
+    global inforef
 
     balancesheetref = stock.balance_sheet.index
     
@@ -29,7 +29,5 @@ def get_col_refs():
     everyref = balancesheetref.union(financialsref).union(cashflowref)
 
     inforef = stock.info.values()
-  
-
 
 get_col_refs()
