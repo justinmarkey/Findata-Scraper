@@ -28,6 +28,7 @@ def rename_downloaded_csv(target_download_dir: str) -> None:
     new_file_path = f"{target_download_dir}/nasdaq_stocklist{today_date_str}.csv"
     os.rename(original_file_path, new_file_path)
 
+
 def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
 
     url_stocklist = "https://www.nasdaq.com/market-activity/stocks/screener"
@@ -69,7 +70,7 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
     time.sleep(3)
 
     driver.quit()
-
+    
 
 def get_current_stocklist():
     
@@ -89,6 +90,6 @@ def get_current_stocklist():
     
     fetch_nasdaq_stocklist(target_download_dir)
     rename_downloaded_csv(target_download_dir)
-
+    print("Successfully fetched csv")
 
 get_current_stocklist()
