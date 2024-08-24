@@ -18,6 +18,7 @@ def clean_data():
 
     #find csv file name path
     csv_filename = find_csv()
+    csv_filename = csv_filename[0]
     stock_df = pd.read_csv(csv_filename)
     
     #Drop columns that are unnecessary

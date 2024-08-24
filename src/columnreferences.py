@@ -28,6 +28,6 @@ def get_col_refs():
     
     everyref = balancesheetref.union(financialsref).union(cashflowref)
 
-    inforef = stock.info.values()
+    inforef = stock.info.keys()
 
 get_col_refs()
