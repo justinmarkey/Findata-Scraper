@@ -16,7 +16,7 @@ def find_csv(glob_pattern: str = "nasdaq_*") -> str:
 
 def clean_data():
 
-    #find csv file name
+    #find csv file name path
     csv_filename = find_csv()
     stock_df = pd.read_csv(csv_filename)
     

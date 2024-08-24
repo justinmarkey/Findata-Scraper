@@ -11,7 +11,7 @@ newcsv_dropref = (
 )
 
 def get_col_refs():
-    print("printing")
+
     stock = yf.Ticker("AAPL")
 
     global balancesheetref
