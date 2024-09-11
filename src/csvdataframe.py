@@ -1,13 +1,13 @@
 import pandas as pd
 import glob
-import os
+from makedirectory import makedirectory
 
 from columnreferences import *
 
 def find_csv(glob_pattern: str = "nasdaq_*") -> str:
 
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    csv_file_dir = f"{current_dir}/../data/exchangelistcsv"
+    csv_file_dir = makedirectory("data/csv/exchangelistcsv")
+    
     glob_pattern = "nasdaq_*"
 
     csv_filename = glob.glob(f"{csv_file_dir}/{glob_pattern}")
@@ -37,17 +37,9 @@ def clean_data():
     #create stock data df with financial colummns
     financialcolumns_df = pd.DataFrame(columns=everyref)
     financials_df = pd.concat([stock_df,financialcolumns_df], axis=1)
-
-    #create stock info df with inforef columns
-    infocolumns_df = pd.DataFrame(columns=inforef)
-    stockinfo_df = pd.concat([stock_df,infocolumns_df], axis=1)
-
+    
     #reset the index on the df's
-    financials_df.reset_index(drop=True)
-    stockinfo_df.reset_index(drop=True)
+    financials_df.reset_index()
 
     #convert into csv
-    financials_df.to_csv('data/stockdata.csv', index=False)
-    stockinfo_df.to_csv('data/stockinfo.csv', index=False)
-
-clean_data()
+    financials_df.to_csv('data/csv/stockdata.csv', index=False)

@@ -12,6 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from webdriver_manager.firefox import GeckoDriverManager
 
+from makedirectory import makedirectory
+
 def rename_downloaded_csv(target_download_dir: str) -> None:
     
     #identify the file name
@@ -73,12 +75,11 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
     
 
 def get_current_stocklist():
-    
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    target_download_dir = f"{current_dir}/../data/exchangelistcsv"
-
-    if not os.path.exists(target_download_dir):
-        os.makedirs(target_download_dir)
+    """
+    Master script function for getting the stocklist from nasdaq website
+    """
+    #make directory path
+    target_download_dir = makedirectory("data/exchangelistcsv")
     
     path_csv_files = glob.glob(f"{target_download_dir}/nasdaq_*")
     

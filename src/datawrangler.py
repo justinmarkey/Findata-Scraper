@@ -1,13 +1,12 @@
-import concurrent.futures
 import pandas as pd
-
-import yfinance as yf
 import numpy as np
-import timeit as t
-from columnreferences import *
+import time
+from concurrent.futures import ThreadPoolExecutor
 
-
+import yfinance
 import requests_cache
+
+from columnreferences import *
 
 #read into memory stockdata
 financials_df = pd.read_csv("data/stockdata.csv")
@@ -16,112 +15,124 @@ financials_df = financials_df.set_index('Symbol')
 
 
 #read into memory stockinfo data
-stockinfo_df = pd.read_csv("data/stockinfo.csv")
+#this must be loaded as dtype 'object' as the columns contain a mix of strs and ints
+info_df = pd.read_csv("data/stockinfo.csv",dtype= 'object')
 
-stockinfo_df = stockinfo_df.set_index('Symbol')
+info_df = info_df.set_index('Symbol')
 
 test_symbol_list = financials_df.index[:24]
+
 symbol_list = financials_df.index
 
-session = requests_cache.CachedSession('yfinance.cache', expire_after=1800)
+session = requests_cache.CachedSession('yfinance.cache')
+
 
 def setting_financial_data(symbol, financials, ref):
     try:
-        fin_col = financials.loc[ref]
-        print(fin_col)
+        fin_col = financials[ref]
         if fin_col.isnull().any() == False: #check if the data has any NaN or None
             financials_df.at[symbol, ref] = np.mean(fin_col)
         
-    except KeyError as e:
-        print(f"Symbol - {symbol} KeyError: {e}")
+    except Exception as err:
+        print(f"setting fin data error: {err} \n data = {financials} \n fincol = {fin_col} \n symbol = {symbol} \n ref = {ref}")
+
 
 def setting_balancesheet_data(symbol, sheet, ref):
     try:
-        bal_col = sheet.loc[ref]    
-        if bal_col.isnull().any() == False:
-            financials_df.at[symbol, ref] = np.mean(bal_col)
-            return None 
-    except KeyError:
-        return None
+        balancesheet_col = sheet[ref]    
+        if balancesheet_col.isnull().any() == False:
+            financials_df.at[symbol, ref] = np.mean(balancesheet_col)
+            
+    except Exception as err:
+        print(f"{err}")
 
     
 def setting_cashflow_data(symbol, cashflow, ref):
     try:
-        cashflow_col = cashflow[cashflow[ref]] 
-        print(cashflow)
+        cashflow_col = cashflow[ref] 
         if cashflow_col.isnull().any() == False: 
             financials_df.at[symbol, ref] = np.mean(cashflow_col)
-            return None
-    except KeyError:
-        return None
+ 
+    except Exception as err:
+        print(f"{err}")
 
 
 def setting_tickerinfo_data(symbol, info, ref):
     try:
-        info_col = info.values().loc[ref]
+        info_col = info[ref]
 
-        stockinfo_df.at[symbol, ref] = info_col
-        return None
-    except KeyError:
-        return None
+        info_df.at[symbol, ref] = info_col
 
+    except Exception as err:
+        print(f"setting fin data error: {err} \n data = {info} \n fincol = {info_col} \n symbol = {symbol} \n ref = {ref}")
 
 nonUSD_symbols = []
 nodata_symbols = []
 
-def bulkdownload(symbol, api_sleep_timer: int = 6):
+def download_stockdata(symbol, api_sleep_timer: int = 0.2):
 
     '''
     bulk download of the data
     '''
-    
-    stock = yf.Ticker(symbol, session=session)
-    
-    #confirm USD denominated securities
-    if stock.info['financialCurrency'] != 'USD':
-        nonUSD_symbols.append(symbol)
-    #confirm if data returned from API is 0  
-    if financials.size == 0 or cashflow.size == 0:
-        nodata_symbols.append(symbol)
+    try:
+        stock = yfinance.Ticker(symbol, session=session)
 
-        earnings = stock.earnings
+        
+        #confirm USD denominated securities
+        if stock.info['financialCurrency'] != 'USD':
+            nonUSD_symbols.append(symbol)
+        #confirm if data returned from API is 0
+        if stock.financials.size == 0 and stock.cashflow.size == 0:
+            nodata_symbols.append(symbol)
+
         financials = stock.financials
+        financials = financials.transpose()
+
         cashflow = stock.cashflow
+        cashflow = cashflow.transpose()
+
         sheet = stock.balance_sheet
+        sheet = sheet.transpose()
+
         info = stock.info
 
-    for ref in inforef:
-        setting_tickerinfo_data(symbol, info, ref)
+        for ref in inforef:
+            setting_tickerinfo_data(symbol=symbol, info=info, ref=ref)
+
+        for ref in financialsref:
+            setting_financial_data(symbol, financials, ref)
+        #cashflow   
+        for ref in cashflowref:
+            setting_cashflow_data(symbol, cashflow, ref)
+        #sheet  
+        for ref in balancesheetref:
+            setting_balancesheet_data(symbol, sheet, ref)
+
+        print(symbol)
+        #to avoid exhausting the Yahoo Finance API limit.
         
-    for ref in financialsref:
-        setting_financial_data(symbol, financials, ref)
-    #cashflow   
-    for ref in cashflowref:
-        setting_cashflow_data(symbol, cashflow, ref)
-    #sheet  
-    for ref in balancesheetref:
-        setting_balancesheet_data(symbol, sheet, ref)
+        time.sleep(api_sleep_timer)
 
-    #to avoid exhausting the Yahoo Finance API limit. 6 seconds seems to be the optimal time
-    print(symbol)
-    t.sleep(api_sleep_timer)
+    except Exception as e:
+        print (f"{symbol} caused {e}")
 
-def threadhandler(method, stocklist):
+def threadhandler(method=download_stockdata, stocklist=test_symbol_list):
 
-    with concurrent.futures.ThreadPoolExecutor() as exe:
+    #clear cache
+    requests_cache.clear()
 
+    with ThreadPoolExecutor(max_workers=1) as exe:
         exe.map(method, stocklist)
 
     #clear out empty's
-    for i in nodata_symbols:
-        financials_df.drop(i, inplace = True)
+    [financials_df.drop(x, inplace = True) for x in nodata_symbols]
 
     #reset the "Symbol" column as index
     financials_df.reset_index()
-    stockinfo_df.reset_index()
+    info_df.reset_index()
 
     financials_df.to_csv("data/populated_data.csv")
-    stockinfo_df.to_csv("data/populated_info.csv")
+    info_df.to_csv("data/populated_info.csv")
     
     
 def normalizedf():
@@ -134,8 +145,9 @@ def normalizedf():
 
     zeroequity = findata[findata['Total Stockholder Equity'].eq(0)]
     
-    for idx in zeroequity.index:
-        findata.drop(idx, inplace=True)
+    [findata.drop(idx, inplace=True) for idx in zeroequity.index]
+    #for idx in zeroequity.index:
+        #findata.drop(idx, inplace=True)
         
     findata = findata.reset_index(drop=True)
 
@@ -153,6 +165,7 @@ def normalizedf():
 
     findata.to_csv("data/stockdata_normalized.csv", index=False)
 
-
-#threadhandler(bulkdownload, symbol_list)
-#t.timeit(threadhandler)
+if __name__ == '__main__':
+    
+    get_col_refs(ticker="AAPL")
+    threadhandler()

@@ -1,4 +1,4 @@
-import yfinance as yf
+import yfinance
 
 newcsv_dropref = (
     "Name",
@@ -10,15 +10,18 @@ newcsv_dropref = (
     "Volume",
 )
 
-def get_col_refs():
+def get_col_refs(ticker: str) -> None:
+    
+    """
+    Singular yfinance call to get the column references
+    """
 
-    stock = yf.Ticker("AAPL")
+    stock = yfinance.Ticker(ticker)
 
     global balancesheetref
     global financialsref
     global cashflowref
     global everyref
-    global inforef
 
     balancesheetref = stock.balance_sheet.index
     
@@ -28,6 +31,4 @@ def get_col_refs():
     
     everyref = balancesheetref.union(financialsref).union(cashflowref)
 
-    inforef = stock.info.keys()
-
-get_col_refs()
+    print("Finished Retrieving the column references")
