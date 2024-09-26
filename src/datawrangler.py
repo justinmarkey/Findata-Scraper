@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 import yfinance
 import requests_cache
 
-from columnreferences import *
+from data_scripts.columnreferences import *
 
 #read into memory stockdata
 financials_df = pd.read_csv("data/stockdata.csv")

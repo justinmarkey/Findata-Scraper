@@ -3,7 +3,7 @@ import pandas as pd
 import statistics as s
 from scipy import stats
 
-from csvdataframe import balancesheetref, financialsref, cashflowref, earningsref, everyref
+from data_scripts.csvdataframe import balancesheetref, financialsref, cashflowref, earningsref, everyref
 
 import seaborn as sns
 import matplotlib.pyplot as plt
