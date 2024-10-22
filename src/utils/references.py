@@ -1,4 +1,5 @@
 import yfinance
+import json
 
 newcsv_dropcolumns = (
     "Name",
@@ -10,8 +11,7 @@ newcsv_dropcolumns = (
     "Volume",
 )
     
-  
-def get_col_refs(ticker: str = "AAPL") -> None:
+def get_col_refs(ticker: str = "AAPL"):
     
     """
     Singular yfinance call to get the column references
@@ -36,5 +36,8 @@ def get_col_refs(ticker: str = "AAPL") -> None:
         'cashflowref': cashflowref,
         'everyref': everyref
     }
-
-#get_col_refs()
+    
+def get_nested_info_refs(symbol: str = "AAPL"):
+    with open("data/json/info.json", 'r') as info_data:
+        info = json.load(info_data)
+    return list(info[symbol].keys())
