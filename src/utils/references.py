@@ -1,16 +1,20 @@
 import yfinance
 import json
 
-newcsv_dropcolumns = (
-    "Name",
-    "Last Sale",
-    "Net Change",
-    "% Change",
-    "Country",
-    "IPO Year",
-    "Volume",
+#specify which columns to keep for the cleandata.py
+newcsv_keepcolumns = (
+    "Symbol",
+    "Market Cap",
+    "Industry",
+    "Sector",
 )
-    
+
+def get_nested_info_refs(symbol: str = "AAPL"):
+    with open("data/json/info.json", 'r') as info_data:
+        info = json.load(info_data)
+    return list(info[symbol].keys())
+
+#currently not used 
 def get_col_refs(ticker: str = "AAPL"):
     
     """
@@ -36,8 +40,3 @@ def get_col_refs(ticker: str = "AAPL"):
         'cashflowref': cashflowref,
         'everyref': everyref
     }
-    
-def get_nested_info_refs(symbol: str = "AAPL"):
-    with open("data/json/info.json", 'r') as info_data:
-        info = json.load(info_data)
-    return list(info[symbol].keys())

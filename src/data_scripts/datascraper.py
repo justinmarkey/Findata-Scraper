@@ -1,15 +1,11 @@
 import pandas as pd
 import time
 import json
-
 import yfinance
 
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-
-from utils.columnreferences import *
 from utils.jsonencoder import CustomEncoder
-
 
 #threading lock object for the hdf5 file
 hdf5_lock = Lock()
@@ -19,9 +15,8 @@ t1 = time.time()
 stock_calenders = {}
 stock_info = {}
 
-#session = requests_cache.CachedSession('yfinance.cache')
 
-def download_earnings (symbol) -> None:
+def download_earnings (symbol):
     """
     downloads the stockdata by using the yfinance library and places the data
     into an sql table
@@ -83,7 +78,7 @@ def download_earnings (symbol) -> None:
     time.sleep(0.42)
     return
     
-def download_controller (method = download_earnings) -> None:
+def download_controller (method = download_earnings):
     """
     Master script for controlling downloads
     """
@@ -100,7 +95,8 @@ def download_controller (method = download_earnings) -> None:
         
     t2 = time.time()
     print(f"Download Fin Statement Data took {t2-t1} seconds")
-    
+
+    #CustomEncoder is used change Datetime "Date" objs into compatible JSON strings
     with open(f'data/json/calenders.json', 'w') as file:
         json.dump(stock_calenders, file, cls=CustomEncoder, indent=4)
 

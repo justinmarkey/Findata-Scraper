@@ -2,6 +2,7 @@ import os
 import time
 from datetime import date
 import glob
+from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -12,7 +13,6 @@ from selenium.webdriver.support import expected_conditions as EC
 
 from webdriver_manager.firefox import GeckoDriverManager
 
-from utils.makedirectory import makedirectory
 
 def rename_downloaded_csv(target_download_dir: str) -> None:
     
@@ -82,9 +82,11 @@ def get_current_stocklist():
     Master script function for getting the stocklist from nasdaq website
     """
     #make directory path
-    target_download_dir = makedirectory("data/csv/")
     
-    path_csv_files = glob.glob(f"{target_download_dir}/nasdaq_*")
+    csv_root = f"{Path(__file__).resolve().parent.parent}/data/csv"
+    os.makedirs(csv_root, exist_ok=True)
+    
+    path_csv_files = glob.glob(f"{csv_root}/nasdaq_*")
     
     #cleaning the target download directory
     for csv_file in path_csv_files:
@@ -92,6 +94,6 @@ def get_current_stocklist():
             os.remove(csv_file)
             
     
-    fetch_nasdaq_stocklist(target_download_dir)
-    rename_downloaded_csv(target_download_dir)
+    fetch_nasdaq_stocklist(csv_root)
+    rename_downloaded_csv(csv_root)
     print("Successfully fetched csv")

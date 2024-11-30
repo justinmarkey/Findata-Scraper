@@ -1,18 +1,16 @@
 import pandas as pd
 import glob
-from utils.makedirectory import makedirectory
 
-from data_scripts.columnreferences import *
-
+from utils.references import newcsv_keepcolumns
 
 def find_csv(glob_pattern: str = "nasdaq_*") -> str:
 
-    csv_file_dir = makedirectory("data/csv")
+    csv_root = "../../data/csv"
     
     glob_pattern = "nasdaq_*"
 
-    csv_filename = glob.glob(f"{csv_file_dir}/{glob_pattern}")
-
+    csv_filename = glob.glob(f"{csv_root}/{glob_pattern}")
+    
     return(csv_filename[0])
 
 
@@ -23,8 +21,8 @@ def clean_data():
     
     stock_df = pd.read_csv(csv_filename)
     
-    #Drop unused columns
-    stock_df = stock_df.drop(columns=[x for x in newcsv_dropcolumns])
+    #Drop the excess columns by keeping
+    stock_df = stock_df[newcsv_keepcolumns]
     
     #Drop zero marketcap securities
     zero_Marketcap_droplist = stock_df[stock_df['Market Cap'].eq(0)] #get rid of zeros in marketcap
@@ -36,15 +34,6 @@ def clean_data():
     stock_df = stock_df.drop (NaN_droplist.index)
     print (f"{len(NaN_droplist)} tickers had no specified Sector or Industry \n")
     
-    #Get data refs. Arbitrarily using AAPL
-    data_refs = get_col_refs("AAPL")
-        
-    #create stock data df with financial colummns
-    financialcolumns_df = pd.DataFrame(columns=data_refs["everyref"])
-    financials_df = pd.concat([stock_df,financialcolumns_df], axis=1)
+    stock_df.reset_index()
     
-    financials_df.reset_index()
-    
-    financials_df.to_csv('data/csv/stockdata.csv', index=False)
-    
-clean_data()
+    stock_df.to_csv('data/csv/stockdata.csv', index=False)

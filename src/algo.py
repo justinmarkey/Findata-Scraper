@@ -3,8 +3,6 @@ import pandas as pd
 import statistics as s
 from scipy import stats
 
-from data_scripts.csvdataframe import balancesheetref, financialsref, cashflowref, earningsref, everyref
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -17,9 +15,9 @@ findata = pd.read_csv('../data/normalizeddb.csv')
 class testing():
     def __init__(self, findata: pd.DataFrame,sector: str, element: str):
 
-        findata = self.findata
-        sector = self.sector
-        element = self.element
+        self.findata = findata
+        self.sector = sector
+        self.element = element
 
     def shapiro_testing_sector(sector: str, element: str) -> None:
         data_filter = findata[findata["Sector"] == sector]
