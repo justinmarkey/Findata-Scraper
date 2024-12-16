@@ -1,11 +1,11 @@
 import pandas as pd
 import glob
 
-from utils.references import newcsv_keepcolumns
+from src.utils.references import newcsv_keepcolumns
 
 def find_csv(glob_pattern: str = "nasdaq_*") -> str:
 
-    csv_root = "../../data/csv"
+    csv_root = "data/csv"
     
     glob_pattern = "nasdaq_*"
 

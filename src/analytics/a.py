@@ -1,20 +1,23 @@
 import numpy as np
 import pandas as pd
 import statistics as s
+import json
 from scipy import stats
-
 #import seaborn as sns
 #import matplotlib.pyplot as plt
-
 import time as t
 
+EARNINGS_JSONPATH = "data/json/earningsdata.json"
+
+
 # Import the data
+def build_dataframe():
+    
+    with open(file_path, "r") as file:
+            data = json.load(file)
+    
+    with 
 
-
-
-findata = pd.read_hdf("../../data/hdf5/earningsdata.h5",)
-
-print (findata.columns)
 
 def shapiro_testing_sector(sector: str, element: str) -> None:
     data_filter = findata[findata["Sector"] == sector]
