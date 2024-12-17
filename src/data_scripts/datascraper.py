@@ -26,15 +26,12 @@ def read_json_file(file_path: str) -> dict:
     try:
         with open(file_path, "r") as file:
             data = json.load(file)
+            return data
         
-    except FileNotFoundError:
-        data = {}
-    
-    except json.JSONDecodeError as e:
-        print (f"JSON Decoding Error:{e}\nRebuilding json db...")
-        data = {}
-        
-    return data
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+       print(f"Rebuilding dict...: {e}")  # Optional logging for debugging
+       return {}
+   
 
 def write_json_file(file_path: str, data: dict) -> None:
     
@@ -76,13 +73,23 @@ def update_json_earnings(db_path: str, new_data: dict) -> None:
     current_data = read_json_file(db_path)
     
     for ticker, new_earnings in new_data.items():
-        # Initialize ticker if it does not exist
-        current_data.setdefault(ticker, {})
+        
+        if ticker not in current_data:
+            # Add the new ticker symbol
+            current_data[ticker] = new_earnings
+            
+        else:
+            for date, values in new_earnings.items():
+                if date in current_data[ticker]:
+                    # update earnings data for the date key
+                    current_data[ticker][date].update(values)
+                    
+                else:
+                    # Add the new date key
+                    current_data[ticker][date] = values
 
-        for date, values in new_earnings.items():
-            # Initialize date if it does not exist, then update values
-            current_data[ticker].setdefault(date, {}).update(values)
-
+    print(current_data)
+    print(type(current_data))
     write_json_file(file_path=db_path, data=current_data)
 
 
@@ -100,18 +107,23 @@ def download_earnings (symbol):
         return
     
     #swap the datetime and the financial reference so dates are the rows
-    financials = stock.financials.transpose()
-    cashflow = stock.cashflow.transpose()
-    sheet = stock.balancesheet.transpose()
+    financials = stock.financials.T
+    cashflow = stock.cashflow.T
+    sheet = stock.balancesheet.T
 
     #concatenate along the columns
     aggregated_df = pd.concat([financials, cashflow, sheet], axis=1)
+    #aggregated_df2 = pd.concat([stock.financials, stock.cashflow, stock.balancesheet], axis=0)
     
-    #change dtype from "object" to "float64"
-    aggregated_df = aggregated_df.astype({col: 'float64' for col in aggregated_df.select_dtypes(include=['object']).columns})
+    #convert the pandas Datetime type to a string for JSON enconding. The dates sit as the index after the transposing
+    aggregated_df.index = aggregated_df.index.strftime('%Y-%m-%d')
     
+    print(aggregated_df.head())
+    
+    aggregated_df = aggregated_df.to_dict(orient="index")
     #using threading.Lock() to prevent data races
     with json_lock:
+
         calendars_dict[symbol] = stock.calendar
         info_dict[symbol] = stock.info
         earnings_dict[symbol] = aggregated_df
@@ -132,7 +144,6 @@ def download_controller (method = download_earnings, symbol_list = None):
         symbol_list = financials_df["Symbol"].to_list()
     
     list_len = len(symbol_list)
-    
     print(f"Downloading started for {list_len}\n")
     
     with ThreadPoolExecutor(max_workers=8) as tpe:
@@ -140,6 +151,8 @@ def download_controller (method = download_earnings, symbol_list = None):
         
     t2 = time.time()
     print(f"Download Fin Statement Data took {t2-t1} seconds")
+
+    print(info_dict)
 
     update_json_info(db_path=INFO_JSONPATH, new_data=info_dict)
     update_json_calendars(db_path=CALENDAR_JSONPATH, new_data=calendars_dict)
