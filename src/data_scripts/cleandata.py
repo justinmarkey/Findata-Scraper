@@ -1,7 +1,7 @@
 import pandas as pd
 import glob
 
-from src.utils.references import newcsv_keepcolumns
+NEWCSV_KEEPCOLUMNS = ["Symbol", "Market Cap","Industry","Sector"] #keep as a list
 
 def find_csv(glob_pattern: str = "nasdaq_*") -> str:
 
@@ -21,8 +21,8 @@ def clean_data():
     
     stock_df = pd.read_csv(csv_filename)
     
-    #Drop the excess columns by keeping
-    stock_df = stock_df[newcsv_keepcolumns]
+    #Drop the excess columns by keeping the list of columns specified
+    stock_df = stock_df[NEWCSV_KEEPCOLUMNS]
     
     #Drop zero marketcap securities
     zero_Marketcap_droplist = stock_df[stock_df['Market Cap'].eq(0)] #get rid of zeros in marketcap
@@ -37,3 +37,5 @@ def clean_data():
     stock_df.reset_index()
     
     stock_df.to_csv('data/csv/stockdata.csv', index=False)
+    
+clean_data()

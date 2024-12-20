@@ -2,12 +2,12 @@ import yfinance
 import json
 
 #specify which columns to keep for the cleandata.py
-newcsv_keepcolumns = (
+newcsv_keepcolumns = [
     "Symbol",
     "Market Cap",
     "Industry",
     "Sector",
-)
+]
 
 def get_nested_info_refs(symbol: str = "AAPL"):
     with open("data/json/info.json", 'r') as info_data:

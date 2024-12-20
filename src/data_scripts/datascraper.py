@@ -2,16 +2,15 @@ import pandas as pd
 import time
 import json
 import yfinance
-
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
-
+import requests_cache
 from src.utils.jsonencoder import CustomEncoder
 
-#threading lock object for the json file
-json_lock = Lock()
-
 t1 = time.time()
+#threading lock object for the json file
+dict_lock = Lock()
+cache_lock = Lock()
 
 CALENDAR_JSONPATH = "data/json/calendar.json"
 INFO_JSONPATH = "data/json/info.json"
@@ -21,6 +20,13 @@ info_dict = {}
 calendars_dict = {}
 earnings_dict = {}
 
+session = requests_cache.install_cache('yfinance_cache', expire_after=10800)  # Cache expires after 3 hours
+
+
+#use this to store the tickers to retry if theres a 429 API block
+retry_ticker_set = set()
+
+
 def read_json_file(file_path: str) -> dict:
     
     try:
@@ -29,7 +35,7 @@ def read_json_file(file_path: str) -> dict:
             return data
         
     except (FileNotFoundError, json.JSONDecodeError) as e:
-       print(f"Rebuilding dict...: {e}")  # Optional logging for debugging
+       print(f"OK Rebuilding dict because {e}")  # Optional logging for debugging
        return {}
    
 
@@ -88,54 +94,59 @@ def update_json_earnings(db_path: str, new_data: dict) -> None:
                     # Add the new date key
                     current_data[ticker][date] = values
 
-    print(current_data)
-    print(type(current_data))
     write_json_file(file_path=db_path, data=current_data)
 
-
-def download_earnings (symbol):
+def download_earnings (symbol:str) -> None:
     """
     downloads the stockdata by using the yfinance library and places the data
     into JSON files
     """
     
-    stock = yfinance.Ticker(symbol)
+    stock = yfinance.Ticker(symbol, session=session)
     
     #confirm USD-denominated earnings data
-    if stock.info.get('financialCurrency') != 'USD':
-        print(f"{symbol} is a non USD-denominated security\n")
-        return
+    with cache_lock:
+        try:    
+            info = stock.get_info()
     
-    #swap the datetime and the financial reference so dates are the rows
-    financials = stock.financials.T
-    cashflow = stock.cashflow.T
-    sheet = stock.balancesheet.T
-
-    #concatenate along the columns
-    aggregated_df = pd.concat([financials, cashflow, sheet], axis=1)
-    #aggregated_df2 = pd.concat([stock.financials, stock.cashflow, stock.balancesheet], axis=0)
+            if info.get('financialCurrency') != 'USD':
+                print(f"{symbol} is a non USD-denominated security\n")
+                return
     
-    #convert the pandas Datetime type to a string for JSON enconding. The dates sit as the index after the transposing
-    aggregated_df.index = aggregated_df.index.strftime('%Y-%m-%d')
+            calendar = stock.get_calendar()
+            financials = stock.get_income_stmt(as_dict=False,freq="quarterly")
+            cashflow = stock.get_cash_flow(as_dict=False,freq="quarterly")
+            sheet = stock.get_balance_sheet(as_dict=False,freq="quarterly")
+        except Exception:
+            retry_ticker_set.add(symbol)
+        
+    #concatenate Findata along the rows
+    #convert the pandas Datetime type columns to a string types to allowing for JSON encode
     
-    print(aggregated_df.head())
+    aggregated_df = pd.concat([financials, cashflow, sheet], axis=0)
+    aggregated_df.columns = aggregated_df.columns.strftime('%Y-%m-%d')
     
-    aggregated_df = aggregated_df.to_dict(orient="index")
+    #prep the data to be stored in JSON. Store in a dict temporarily and write to JSON once.
     #using threading.Lock() to prevent data races
-    with json_lock:
+        
+    aggregated_df = aggregated_df.to_dict(orient="index")
+    
+    with dict_lock:
 
-        calendars_dict[symbol] = stock.calendar
-        info_dict[symbol] = stock.info
+        calendars_dict[symbol] = calendar
+        info_dict[symbol] = info
         earnings_dict[symbol] = aggregated_df
         
-    print(f"{symbol}\n")
-    #sleep the thread to avoid API block
-    time.sleep(0.42)
+    t2 = time.time()  
+    print(f"{symbol}\n -> {t2-t1} seconds")
+    
+    #sleep the thread to avoid API limit
+    time.sleep(10)
     
     return
-    
 
-def download_controller (method = download_earnings, symbol_list = None):
+
+def download_controller (method: object = download_earnings, symbol_list: list = None) -> None:
     """
     Master script for controlling downloads
     """
@@ -145,18 +156,28 @@ def download_controller (method = download_earnings, symbol_list = None):
     
     list_len = len(symbol_list)
     print(f"Downloading started for {list_len}\n")
-    
+    print(f"Estimated Minutes: {list_len//8*10//60}")
     with ThreadPoolExecutor(max_workers=8) as tpe:
-        tpe.map(method, symbol_list[0])
-        
-    t2 = time.time()
-    print(f"Download Fin Statement Data took {t2-t1} seconds")
-
-    print(info_dict)
-
+        tpe.map(method, symbol_list)
+    
+    #update the JSON's with what we have before the recursive call. 
     update_json_info(db_path=INFO_JSONPATH, new_data=info_dict)
     update_json_calendars(db_path=CALENDAR_JSONPATH, new_data=calendars_dict)
     update_json_earnings(db_path=EARNINGS_JSONPATH, new_data=earnings_dict)
+    
+    #retry logic -> temporarily hold retry symbols in another variable, and reset global list to empty. Recursively call until all symbols are called.
+    global retry_ticker_set
+    if len(retry_ticker_set) != 0:
+        
+        print(f"Retrying API requests for {retry_ticker_set}\nwaiting 30 seconds")
+        to_retry = retry_ticker_set
+        retry_ticker_set = set()
+        time.sleep(30)
+        download_controller (method= download_earnings, symbol_list=to_retry)
+               
+        
+    
+
     
     
 download_controller()
