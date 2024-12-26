@@ -148,8 +148,17 @@ def download_earnings (symbol:str) -> None:
 
 def download_controller (method: object = download_earnings, symbol_list: list = None) -> None:
     """
-    Master script for controlling downloads
+    Master script for controlling downloads.
+    
+    Attempts to download all tickers in the symbol_list. If theres an API block (see download_earnings,
+    it will store the symbol in a global list (protected by a Lock() object for thread access protection).
+    
+    after looping the original list, it will retry looping through the blocked list (download_earnings has a
+    try/except block to always add the ticker if the API blocks). The retry logic will recursively call the 
+    retry_list and empty it until all tickers in the original fetching were successfully returned.
     """
+    
+    #if no symbols are provided in arg, the default will be to download the entire list noted below.
     if not symbol_list:
         financials_df = pd.read_csv("data/csv/stockdata.csv")
         symbol_list = financials_df["Symbol"].to_list()
@@ -157,27 +166,25 @@ def download_controller (method: object = download_earnings, symbol_list: list =
     list_len = len(symbol_list)
     print(f"Downloading started for {list_len}\n")
     print(f"Estimated Minutes: {list_len//8*10//60}")
+    
+    #create the thread mapping to the download_earnings function
     with ThreadPoolExecutor(max_workers=8) as tpe:
         tpe.map(method, symbol_list)
     
-    #update the JSON's with what we have before the recursive call. 
+    #write the dictionary's to the JSON files
     update_json_info(db_path=INFO_JSONPATH, new_data=info_dict)
     update_json_calendars(db_path=CALENDAR_JSONPATH, new_data=calendars_dict)
     update_json_earnings(db_path=EARNINGS_JSONPATH, new_data=earnings_dict)
     
-    #retry logic -> temporarily hold retry symbols in another variable, and reset global list to empty. Recursively call until all symbols are called.
+    #retry logic -> Recursively call until all symbols are fetched from the API. Uses the retry global list. 
+    #Need to temporarily store the retry list so that you can reset the global list to empty.
     global retry_ticker_set
     if len(retry_ticker_set) != 0:
         
-        print(f"Retrying API requests for {retry_ticker_set}\nwaiting 30 seconds")
-        to_retry = retry_ticker_set
+        print(f"Retrying API requests for {retry_ticker_set}\nwaiting 5 minutes")
+        temp = retry_ticker_set
         retry_ticker_set = set()
-        time.sleep(30)
-        download_controller (method= download_earnings, symbol_list=to_retry)
+        time.sleep(300)
+        download_controller (method= download_earnings, symbol_list=temp)
                
-        
-    
-
-    
-    
 download_controller()
