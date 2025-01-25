@@ -3,8 +3,8 @@ import pandas as pd
 import statistics as s
 import json
 from scipy import stats
-#import seaborn as sns
-#import matplotlib.pyplot as plt
+import seaborn as sns
+
 import time as t
 
 EARNINGS_JSONPATH = "data/json/earningsdata.json"
