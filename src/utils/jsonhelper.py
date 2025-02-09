@@ -1,5 +1,5 @@
 import json
-from jsonencoder import CustomEncoder
+from src.utils.jsonencoder import CustomEncoder
 
 def read_json_file(file_path: str) -> dict:
     

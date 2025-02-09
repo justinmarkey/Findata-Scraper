@@ -8,9 +8,6 @@ import matplotlib.pyplot as plt
 
 import time as t
 
-# Import the data
-findata = pd.read_csv('../data/normalizeddb.csv')
-
 ### Helper functions for Pandas
 class testing():
     def __init__(self, findata: pd.DataFrame,sector: str, element: str):

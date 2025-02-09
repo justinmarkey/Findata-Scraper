@@ -9,14 +9,14 @@ import requests_cache
 from src.utils.jsonhelper import *
 from src.utils.jsonencoder import CustomEncoder
 
+from src.utils.datapaths import INFO_JSONPATH, CALENDAR_JSONPATH, EARNINGS_JSONPATH
+
 t1 = time.time()
 #threading lock object for the json file
 dict_lock = Lock()
 cache_lock = Lock()
 
-CALENDAR_JSONPATH = "data/json/calendar.json"
-INFO_JSONPATH = "data/json/info.json"
-EARNINGS_JSONPATH = "data/json/earningsdata.json"
+
 
 info_dict = {}
 calendars_dict = {}
@@ -97,7 +97,7 @@ def download_controller (method: object = download_earnings, symbol_list: list =
     
     list_len = len(symbol_list)
     print(f"Downloading started for {list_len}\n")
-    print(f"Estimated Minutes: {list_len//8*10//60}")
+    print(f"Estimated Minutes: {list_len//8*10//60}") # num of threads = 8, num of seconds to wait = 10
     
     #create the thread mapping to the download_earnings function
     with ThreadPoolExecutor(max_workers=8) as tpe:
@@ -117,6 +117,6 @@ def download_controller (method: object = download_earnings, symbol_list: list =
         temp = retry_ticker_set
         retry_ticker_set = set()
         time.sleep(300)
-        download_controller (method= download_earnings, symbol_list=temp)
+        download_controller (symbol_list=temp)
                
-download_controller()
+#download_controller()
