@@ -9,9 +9,8 @@ def read_json_file(file_path: str) -> dict:
             return data
         
     except (FileNotFoundError, json.JSONDecodeError) as e:
-       print(f"OK Rebuilding dict because {e}")  # Optional logging for debugging
-       return {}
-   
+        print(f"OK Rebuilding dict because {e}")  # Optional logging for debugging
+        return {}
 
 def write_json_file(file_path: str, data: dict) -> None:
     

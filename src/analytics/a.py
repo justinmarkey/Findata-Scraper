@@ -13,6 +13,8 @@ from src.utils.jsonhelper import *
 from src.utils.lib import *
 
 from src.utils.datapaths import *
+from src.analytics.load_dataset import *
+
 
 # to access data[symbol][element] -> k:v = [date, value]
 # compare data across the industry average.
@@ -36,28 +38,5 @@ def get_industry_average (industry: str, element: str) -> None:
         except KeyError:
             print(f"")
         
-        
-        
-get_industry_average(industry="Major Banks", element="TaxRateForCalcs")
 
-
-def view_data (symbol: str, element: str) -> None:
-    data = read_json_file(file_path=EARNINGS_JSONPATH)
-    result = (data[symbol][element])
-    return result
-
-def view_sector (sector: str, element: str) -> None:
-    data = read_json_file(file_path=EARNINGS_JSONPATH)
-    
-def get_sectors():
-    stockdata = pd.read_csv(STOCKLIST_CSVPATH)
-    return pd.unique(stockdata['Sector'])
-
-def get_industries():
-    stockdata = pd.read_csv(STOCKLIST_CSVPATH)
-    return pd.unique(stockdata['Industry'])
-
-def get_stocks_by_industry(industry: str):
-    
-    stockdata = pd.read_csv(STOCKLIST_CSVPATH)
-    stock_listing_by_industry = stockdata [stockdata["Industry"] == industry]
+dataloaded = load_dataset()
