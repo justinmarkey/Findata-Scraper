@@ -16,27 +16,28 @@ from src.utils.datapaths import *
 from src.analytics.load_dataset import *
 
 
-# to access data[symbol][element] -> k:v = [date, value]
-# compare data across the industry average.
-# 1. load csvfile to get stock information
-# 2. 
-
-#@lru_cache
 def get_industry_average (industry: str, element: str) -> None:
     
-    #keep in mind, these stocks listed here are denominated in USD finances only. All nonUSD securities have been removed for simplicity.
     stockdata = pd.read_csv(STOCKLIST_CSVPATH)
-    stock_listing_by_industry = stockdata [stockdata["Industry"] == industry]
-
-    data = read_json_file(file_path=EARNINGS_JSONPATH)
+    stock_listing_by_industry = stockdata [stockdata["Industry"] == industry] 
     
+    symbols = stock_listing_by_industry["Symbol"]
     
+    dataloaded = load_dataset(symbol_list=symbols)
     
-    for symbol in stock_listing_by_industry["Symbol"]:
-        try:
-            print(type(data[symbol][element]))
-        except KeyError:
-            print(f"")
-        
-
-dataloaded = load_dataset()
+    dataloaded = dataloaded [dataloaded["Element"] == element]
+    
+    return np.mean(dataloaded["Value"])
+    
+def get_sector_average (sector: str, element: str) -> None:
+    
+    stockdata = pd.read_csv(STOCKLIST_CSVPATH)
+    stock_listing_by_sector = stockdata [stockdata["Sector"] == sector] 
+    
+    symbols = stock_listing_by_sector["Symbol"]
+    
+    dataloaded = load_dataset(symbol_list=symbols)
+    
+    dataloaded = dataloaded [dataloaded["Element"] == element]
+    
+    return np.mean(dataloaded["Value"])

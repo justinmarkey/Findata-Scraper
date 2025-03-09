@@ -48,7 +48,7 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
     firefox_options.set_preference("browser.download.dir", target_download_dir)  # Specify the custom directory
     firefox_options.set_preference("browser.download.useDownloadDir", True)
     firefox_options.set_preference("browser.helperApps.neverAsk.saveToDisk", 
-                               "application/csv,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain")
+                                "application/csv,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain")
     
     
     firefox_service = Service(GeckoDriverManager().install())
@@ -56,28 +56,30 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
     
     try:
         driver.get(url_stocklist)
-        wait = WebDriverWait(driver, 5)
+        wait = WebDriverWait(driver, 10)  # Increased wait time for reliability
 
-        # Handle cookie banner
+        # Handle cookie banner if present
         try:
-            cookie_banner = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='onetrust-accept-btn-handler']")))
+            cookie_banner = wait.until(EC.element_to_be_clickable((By.ID, "onetrust-accept-btn-handler")))
             cookie_banner.click()
             print("Cookie banner accepted.")
         except Exception as e:
-            print(f"Cookie banner handling error: {e}")
-
-        # Handle download button
+            print(f"Cookie banner handling error (ignored if not present): {e}")
+        # Wait for the Download CSV button to be clickable
         try:
             download_button = wait.until(EC.element_to_be_clickable(
-                (By.XPATH, "/html/body/div[2]/div/main/div[2]/article/div/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div[2]/div[3]/button")
+                (By.XPATH, "//button[contains(text(), 'Download CSV')]")
             ))
+            # Scroll to the button (optional, but helps in some cases)
+            driver.execute_script("arguments[0].scrollIntoView(true);", download_button)
+            # Click the button
             download_button.click()
-            time.sleep(3)
+            print("Download button clicked.")
+            # Give time for download to complete (adjust as needed)
+            time.sleep(5)
             print("Download completed.")
-            
         except Exception as e:
             print(f"Error interacting with download button: {e}")
-
     finally:
         driver.quit()
         print("WebDriver closed.")
@@ -104,7 +106,7 @@ def get_current_stocklist():
         print(f"Directory {csv_path} is writable.")
     else:
         os.chmod(csv_path, stat.S_IWRITE | stat.S_IWOTH)
-         
+        
     fetch_nasdaq_stocklist(target_download_dir=csv_path)
     rename_downloaded_csv(target_download_dir=csv_path)
     print("Successfully fetched csv")
