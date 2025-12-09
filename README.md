@@ -4,9 +4,10 @@ This repository is a simple way to download and store public earnings data from 
 
 # Installation Instructions
 
-## 1. Clone the repository
-git clone 
-
+## 1. Clone the repository into target folder location
+```bash
+git clone https://github.com/justinmarkey/Findata-Scraper.git
+```
 
 ## 2. Create and activate the environment
 ```bash
@@ -19,6 +20,5 @@ Install the appropriate chromedriver for your appropriate operating system
 
 chromedriver link: https://googlechromelabs.github.io/chrome-for-testing/#stable
 
-
-Troubleshooting
-Selenium library in  XPATH for nasdaq equity repository, which may require manual patching in code.
+# Troubleshooting
+Selenium library in XPATH for nasdaq equity repository, which may require manual patching in code.
