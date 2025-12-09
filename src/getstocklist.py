@@ -50,7 +50,6 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
     firefox_options.set_preference("browser.helperApps.neverAsk.saveToDisk", 
                                 "application/csv,application/excel,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/plain")
     
-    
     firefox_service = Service(GeckoDriverManager().install())
     driver = webdriver.Firefox(service=firefox_service, options=firefox_options)
     
@@ -71,7 +70,8 @@ def fetch_nasdaq_stocklist(target_download_dir: str) -> None:
                 (By.XPATH, "//button[contains(text(), 'Download CSV')]")
             ))
             # Scroll to the button (optional, but helps in some cases)
-            driver.execute_script("arguments[0].scrollIntoView(true);", download_button)
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});",download_button)
+            time.sleep(1)  # Small delay to ensure scrolling has completed
             # Click the button
             download_button.click()
             print("Download button clicked.")

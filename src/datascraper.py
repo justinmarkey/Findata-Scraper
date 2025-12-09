@@ -1,15 +1,9 @@
-import pandas as pd
 import time
-import json
-import yfinance
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 import requests_cache
 
-from src.utils.jsonhelper import *
-from src.utils.jsonencoder import CustomEncoder
-
-from src.utils.datapaths import INFO_JSONPATH, CALENDAR_JSONPATH, EARNINGS_JSONPATH
+from helper import *
 
 t1 = time.time()
 #threading lock object for the json file
@@ -118,5 +112,3 @@ def download_controller (method: object = download_earnings, symbol_list: list =
         retry_ticker_set = set()
         time.sleep(300)
         download_controller (symbol_list=temp)
-               
-#download_controller()
