@@ -14,11 +14,10 @@ def download_all():
     #Will download all stock data from yfinance
     datascraper.download_controller()
     
-def download_specific(ticker):    
+def download_specific(ticker):
     datascraper.download_earnings(symbol=ticker)
     
     
-
 if __name__ == "__main__":
     download_all()
 

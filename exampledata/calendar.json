@@ -1,0 +1,305 @@
+{
+    "A": {
+        "Dividend Date": "2025-01-21",
+        "Ex-Dividend Date": "2024-12-30",
+        "Earnings Date": [
+            "2025-02-24",
+            "2025-03-02"
+        ],
+        "Earnings High": 1.16,
+        "Earnings Low": 1.10869,
+        "Earnings Average": 1.13967,
+        "Revenue High": 1679966000,
+        "Revenue Low": 1660000000,
+        "Revenue Average": 1669191290
+    },
+    "AA": {
+        "Dividend Date": "2024-11-14",
+        "Ex-Dividend Date": "2024-10-28",
+        "Earnings Date": [
+            "2025-01-15",
+            "2025-01-20"
+        ],
+        "Earnings High": 1.398,
+        "Earnings Low": 0.71,
+        "Earnings Average": 1.0278,
+        "Revenue High": 3853600000,
+        "Revenue Low": 3213000000,
+        "Revenue Average": 3442524730
+    },
+    "AADI": {
+        "Earnings Date": [
+            "2025-03-11",
+            "2025-03-17"
+        ],
+        "Earnings High": -0.17,
+        "Earnings Low": -0.58,
+        "Earnings Average": -0.34333,
+        "Revenue High": 7600000,
+        "Revenue Low": 7600000,
+        "Revenue Average": 7600000
+    },
+    "AAL": {
+        "Dividend Date": "2020-02-18",
+        "Ex-Dividend Date": "2020-02-03",
+        "Earnings Date": [
+            "2025-01-23",
+            "2025-01-27"
+        ],
+        "Earnings High": 0.72,
+        "Earnings Low": 0.3,
+        "Earnings Average": 0.58327,
+        "Revenue High": 13496000000,
+        "Revenue Low": 13071000000,
+        "Revenue Average": 13298027590
+    },
+    "AAME": {
+        "Dividend Date": "2024-04-25",
+        "Ex-Dividend Date": "2024-04-10",
+        "Earnings Date": [
+            "2024-11-12"
+        ],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": null,
+        "Revenue Low": null,
+        "Revenue Average": null
+    },
+    "AAOI": {
+        "Earnings Date": [
+            "2025-02-20",
+            "2025-02-24"
+        ],
+        "Earnings High": 0.0,
+        "Earnings Low": -0.03,
+        "Earnings Average": -0.02,
+        "Revenue High": 100695000,
+        "Revenue Low": 99000000,
+        "Revenue Average": 99923750
+    },
+    "AAON": {
+        "Dividend Date": "2024-12-18",
+        "Ex-Dividend Date": "2024-11-28",
+        "Earnings Date": [
+            "2025-02-25",
+            "2025-03-02"
+        ],
+        "Earnings High": 0.56,
+        "Earnings Low": 0.49,
+        "Earnings Average": 0.52833,
+        "Revenue High": 327100000,
+        "Revenue Low": 310600000,
+        "Revenue Average": 320491430
+    },
+    "AAP": {
+        "Dividend Date": "2025-01-23",
+        "Ex-Dividend Date": "2025-01-09",
+        "Earnings Date": [
+            "2025-02-26",
+            "2025-03-03"
+        ],
+        "Earnings High": -0.59,
+        "Earnings Low": -1.74,
+        "Earnings Average": -1.31163,
+        "Revenue High": 1992600000,
+        "Revenue Low": 1878000000,
+        "Revenue Average": 1925743020
+    },
+    "AAPL": {
+        "Dividend Date": "2024-11-13",
+        "Ex-Dividend Date": "2024-11-07",
+        "Earnings Date": [
+            "2025-01-30",
+            "2025-02-03"
+        ],
+        "Earnings High": 2.5,
+        "Earnings Low": 2.19,
+        "Earnings Average": 2.3564,
+        "Revenue High": 129887000000,
+        "Revenue Low": 119563000000,
+        "Revenue Average": 124410526290
+    },
+    "AAT": {
+        "Dividend Date": "2024-12-18",
+        "Ex-Dividend Date": "2024-12-04",
+        "Earnings Date": [
+            "2025-02-04",
+            "2025-02-10"
+        ],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": 113256000,
+        "Revenue Low": 110542000,
+        "Revenue Average": 111899000
+    },
+    "AB": {
+        "Dividend Date": "2024-11-20",
+        "Ex-Dividend Date": "2024-11-03",
+        "Earnings Date": [
+            "2025-02-04",
+            "2025-02-10"
+        ],
+        "Earnings High": 0.891,
+        "Earnings Low": 0.84,
+        "Earnings Average": 0.86683,
+        "Revenue High": 899789000,
+        "Revenue Low": 899789000,
+        "Revenue Average": 899789000
+    },
+    "ABAT": {
+        "Earnings Date": [
+            "2025-02-12",
+            "2025-02-17"
+        ],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": 20110000,
+        "Revenue Low": 20110000,
+        "Revenue Average": 20110000
+    },
+    "ABBV": {
+        "Dividend Date": "2025-02-13",
+        "Ex-Dividend Date": "2025-01-14",
+        "Earnings Date": [
+            "2025-01-31",
+            "2025-02-04"
+        ],
+        "Earnings High": 3.1,
+        "Earnings Low": 2.9,
+        "Earnings Average": 2.97755,
+        "Revenue High": 15020000000,
+        "Revenue Low": 14590000000,
+        "Revenue Average": 14812651700
+    },
+    "ABCB": {
+        "Dividend Date": "2024-10-06",
+        "Ex-Dividend Date": "2024-09-29",
+        "Earnings Date": [
+            "2025-01-23",
+            "2025-01-27"
+        ],
+        "Earnings High": 1.22,
+        "Earnings Low": 1.16,
+        "Earnings Average": 1.192,
+        "Revenue High": 282300000,
+        "Revenue Low": 270243000,
+        "Revenue Average": 276188750
+    },
+    "ABCL": {
+        "Earnings Date": [
+            "2025-02-18",
+            "2025-02-24"
+        ],
+        "Earnings High": -0.1,
+        "Earnings Low": -0.19,
+        "Earnings Average": -0.15143,
+        "Revenue High": 11737000,
+        "Revenue Low": 4350000,
+        "Revenue Average": 7579200
+    },
+    "ABEO": {
+        "Earnings Date": [
+            "2025-03-17",
+            "2025-03-21"
+        ],
+        "Earnings High": -0.34,
+        "Earnings Low": -0.34,
+        "Earnings Average": -0.34,
+        "Revenue High": 500000,
+        "Revenue Low": 0,
+        "Revenue Average": 83330
+    },
+    "ABG": {
+        "Dividend Date": "2008-08-21",
+        "Ex-Dividend Date": "2008-07-29",
+        "Earnings Date": [
+            "2025-02-06",
+            "2025-02-10"
+        ],
+        "Earnings High": 6.19,
+        "Earnings Low": 5.82,
+        "Earnings Average": 5.9828,
+        "Revenue High": 4260900000,
+        "Revenue Low": 3974000000,
+        "Revenue Average": 4115190170
+    },
+    "ABL": {
+        "Earnings Date": [
+            "2025-03-19",
+            "2025-03-24"
+        ],
+        "Earnings High": 0.18,
+        "Earnings Low": 0.12,
+        "Earnings Average": 0.1525,
+        "Revenue High": 41637000,
+        "Revenue Low": 27500000,
+        "Revenue Average": 33254250
+    },
+    "ABLLW": {
+        "Earnings Date": [],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": 41637000,
+        "Revenue Low": 27500000,
+        "Revenue Average": 33254250
+    },
+    "ABLV": {
+        "Earnings Date": [],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": null,
+        "Revenue Low": null,
+        "Revenue Average": null
+    },
+    "ABLVW": {
+        "Earnings Date": [],
+        "Earnings High": null,
+        "Earnings Low": null,
+        "Earnings Average": null,
+        "Revenue High": null,
+        "Revenue Low": null,
+        "Revenue Average": null
+    },
+    "ABM": {
+        "Dividend Date": "2025-02-02",
+        "Ex-Dividend Date": "2025-01-01",
+        "Earnings Date": [
+            "2025-03-05",
+            "2025-03-10"
+        ],
+        "Earnings High": 0.86,
+        "Earnings Low": 0.73,
+        "Earnings Average": 0.78865,
+        "Revenue High": 2138400000,
+        "Revenue Low": 2026470000,
+        "Revenue Average": 2093817190
+    },
+    "ABNB": {
+        "Earnings Date": [
+            "2025-02-11",
+            "2025-02-17"
+        ],
+        "Earnings High": 0.7,
+        "Earnings Low": 0.53,
+        "Earnings Average": 0.59636,
+        "Revenue High": 2474200000,
+        "Revenue Low": 2402000000,
+        "Revenue Average": 2425276410
+    },
+    "ABOS": {
+        "Earnings Date": [
+            "2024-11-12"
+        ],
+        "Earnings High": -0.30745,
+        "Earnings Low": -0.42,
+        "Earnings Average": -0.36582,
+        "Revenue High": 0,
+        "Revenue Low": 0,
+        "Revenue Average": 0
+    }
+}

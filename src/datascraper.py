@@ -10,8 +10,6 @@ t1 = time.time()
 dict_lock = Lock()
 cache_lock = Lock()
 
-
-
 info_dict = {}
 calendars_dict = {}
 earnings_dict = {}
