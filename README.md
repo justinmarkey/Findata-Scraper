@@ -3,10 +3,7 @@
 This repository provides a simple tool for downloading and storing public earnings data for listed equities.
 All data is stored locally in JSON format for easy inspection, analysis, and downstream use.
 
-The scraper currently collects:
-	•	Earnings data
-	•	Earnings calendar data
-	•	Company information
+The scraper currently collects Earnings data and Company information.
 
 ## Installation Instructions
 
