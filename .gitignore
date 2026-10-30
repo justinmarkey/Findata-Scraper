@@ -1,7 +1,14 @@
 .vscode
 env
-tests
 __pycache__
 .DS_Store
 data
 *cache.sqlite
+
+.venv/
+.runtime/
+*.egg-info/
+
+.env
+.env.*
+!.env.example

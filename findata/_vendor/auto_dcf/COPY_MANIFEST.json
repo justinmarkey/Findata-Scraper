@@ -1,0 +1,52 @@
+{
+  "copied_at": "2026-10-29T20:50:02.028221+00:00",
+  "source_project": "Auto_DCF",
+  "note": "Copied current working files, including uncommitted changes; no runtime dependency on original checkout.",
+  "files": [
+    {
+      "path": "environment.yml",
+      "bytes": 1366,
+      "sha256": "b6423fae6ff638a534bafc8070d6241b8da39f0fca0b964440970685d4ae1d07"
+    },
+    {
+      "path": "README.MD",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 73,
+      "sha256": "eeb46c3c704c4d73ca8f49eb83b170e29506c7e88c999505a96cd4078fd76ebc"
+    },
+    {
+      "path": "fcf model.ods",
+      "bytes": 1641555,
+      "sha256": "9f73a37bbdf8e1804d09ec6ebb9208a1365950bcb6c9d3b2ea78bfaa204d4e10"
+    },
+    {
+      "path": "src/__init_.py",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "src/data_fetch.py",
+      "bytes": 1059,
+      "sha256": "6b7dbf3caf3b403a9e5000e7e93cdaf731e92ff2c6b1ac2d7ffa6225da9b2441"
+    },
+    {
+      "path": "src/dcf.py",
+      "bytes": 1352,
+      "sha256": "db86dd27997c79c4729b9f3cda6e0153fdd954e89057c0adfe711276f15cb492"
+    },
+    {
+      "path": "src/main.py",
+      "bytes": 1499,
+      "sha256": "10fd15aa181256cdd6af9228a3ad8b90b914282727422f74d0a2e191ca19b98b"
+    },
+    {
+      "path": "src/wacc.py",
+      "bytes": 554,
+      "sha256": "42739b3c6aceae49eca498c1008820798d57af712e65134d78516811bf7dc780"
+    }
+  ]
+}

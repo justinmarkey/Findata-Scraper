@@ -1,0 +1,106 @@
+schema_version = 1
+
+[storage]
+root = "data/lake"
+
+[providers]
+universe = "nasdaq"
+financials = "openbb:sec"
+prices = "yfinance"
+profiles = "yfinance"
+earnings = "openbb:nasdaq"
+
+# Names of environment variables only. Put their actual values in .env / cloud secrets.
+[providers.key_env]
+fmp_api_key = "FMP_API_KEY"
+intrinio_api_key = "INTRINIO_API_KEY"
+alpha_vantage_api_key = "ALPHA_VANTAGE_API_KEY"
+
+[collection]
+datasets = ["financials", "prices", "profiles"]
+start_date = "1900-01-01"
+attempts = 3
+statement_limit = 200
+workers = 2
+
+[reports]
+recipient_env = "REPORT_TO"
+timezone = "America/New_York"
+screens = ["value", "deep_value", "buffett_user", "multibagger"]
+top_per_screen = 3
+rank_by = ["fcf_yield", "book_to_market"]
+rank_descending = [true, true]
+refresh_per_screen = 10
+max_refresh = 40
+discovery_per_run = 10
+max_quote_age_days = 7
+max_statement_age_days = 550
+profile_max_characters = 700
+morning_time = "07:30"
+evening_time = "20:00"
+
+[screens.value]
+label = "Value"
+rules = [
+  {metric = "price_to_sales", op = "<", threshold = 2.0},
+  {metric = "long_term_debt_to_equity", op = "<", threshold = 0.5},
+  {metric = "net_margin", op = ">", threshold = 0.0},
+  {metric = "price_to_book", op = "<", threshold = 5.0},
+]
+
+# Optional variant: choose value_pe in the CLI or add it to reports.screens.
+# For a different P/E ceiling, change 20.0 here.
+[screens.value_pe]
+label = "Value with P/E ceiling"
+extends = "value"
+rules = [{metric = "price_to_earnings", op = "<", threshold = 20.0}]
+
+[screens.deep_value]
+label = "Debt-free deep value"
+rules = [
+  {metric = "price_to_sales", op = "<", threshold = 3.0},
+  {metric = "price_to_book", op = "<", threshold = 1.0},
+  {metric = "total_debt", op = "=", threshold = 0.0},
+]
+
+[screens.buffett_user]
+label = "Buffett-style user rules"
+# Greater than 0.8 intentionally follows the original request; edit to '<' for a ceiling.
+rules = [
+  {metric = "cash_minus_debt", op = ">=", threshold = 0.0},
+  {metric = "liabilities_to_equity", op = ">", threshold = 0.8},
+  {metric = "preferred_stock", op = "=", threshold = 0.0},
+  {metric = "retained_earnings_change", op = ">", threshold = 0.0},
+  {metric = "treasury_stock", op = ">", threshold = 0.0},
+  {metric = "buyback_cash", op = ">", threshold = 0.0},
+]
+
+[screens.multibagger]
+label = "FCF / book-value candidates"
+rules = [
+  {metric = "fcf_yield", op = ">", threshold = 0.0},
+  {metric = "book_to_market", op = ">", threshold = 0.0},
+]
+
+[valuation]
+growth_rate = 0.08
+terminal_growth = 0.025
+years = 7
+risk_free = 0.042
+market_return = 0.095
+tax_rate = 0.21
+
+[insiders]
+window_days = 30
+lookback_days = 90
+min_insiders = 3
+min_value = 100000.0
+move_threshold = 0.15
+currency = "USD"
+
+[cloud]
+state_key = "findata/state.tar.gz"
+receipt_prefix = "findata/deliveries"
+region = "us-east-1"
+smtp_host = "smtp.gmail.com"
+smtp_port = 465

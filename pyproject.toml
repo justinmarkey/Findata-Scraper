@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "findata-research"
+version = "0.2.0"
+description = "Auditable US equity financial, price and earnings history"
+requires-python = ">=3.11"
+dependencies = ["pandas>=2.2,<4", "pyarrow>=18", "duckdb>=1.2", "requests>=2.32", "yfinance>=0.2.66", "python-dotenv>=1.0"]
+
+[project.optional-dependencies]
+cloud = ["boto3>=1.36"]
+openbb = ["openbb>=4,<5", "openbb-nasdaq", "openbb-fmp", "openbb-yfinance", "openbb-sec"]
+universe = ["financedatabase>=2"]
+analytics = ["financetoolkit>=2"]
+
+[project.scripts]
+findata = "findata.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["findata*"]
+
+[tool.setuptools.package-data]
+"findata" = ["_vendor/auto_dcf/*.ods", "_vendor/auto_dcf/*.yml", "_vendor/auto_dcf/*.json", "_vendor/auto_dcf/README.*", "_vendor/auto_dcf/.gitignore"]
