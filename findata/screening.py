@@ -23,7 +23,8 @@ FLOW_METRICS = {'Total Revenue', 'Net Income', 'EBIT', 'Gross Profit', 'Free Cas
 
 BALANCE_METRICS = {'Stockholders Equity', 'Common Stock Equity', 'Total Debt',
                    'Cash And Cash Equivalents', 'Total Liabilities Net Minority Interest',
-                   'Long Term Debt', 'Preferred Stock', 'Retained Earnings', 'Treasury Stock'}
+                   'Long Term Debt', 'Preferred Stock', 'Retained Earnings', 'Treasury Stock',
+                   'Total Assets', 'Current Assets', 'Current Liabilities', 'Inventory'}
 CANONICAL = {name.replace(' ', '').lower(): name for name in FLOW_METRICS | BALANCE_METRICS}
 
 
@@ -85,6 +86,15 @@ def metrics(snapshot, fx_rate=None):
     equity = get('Stockholders Equity', 'Common Stock Equity')
     debt = get('Total Debt')
     cash = get('Cash And Cash Equivalents')
+    # Cash is a balance-sheet stock: use the newest reported balance, even when
+    # fewer than four quarterly flow statements are available. Annual wins ties.
+    cash_balances = {}
+    for frequency in ('quarterly', 'annual'):
+        for end, value in normalize_statements(snapshot.get(frequency, {})).get('Cash And Cash Equivalents', {}).items():
+            if number(value) is not None:
+                cash_balances[end] = number(value)
+    cash_period = max(cash_balances, default=None)
+    latest_cash = cash_balances.get(cash_period)
     revenue = get('Total Revenue')
     fcf = get('Free Cash Flow')
     if fcf is None:
@@ -109,6 +119,22 @@ def metrics(snapshot, fx_rate=None):
         'market_cap': market_cap, 'price': price,
         'shares_outstanding': number(info.get('sharesOutstanding')),
         'beta': number(info.get('beta')), 'cash': cash, 'total_debt': debt,
+        'latest_cash': latest_cash, 'cash_period_end': cash_period,
+        'cash_quote': convert(latest_cash),
+        'price_to_cash': ratio(market_cap, convert(latest_cash))
+            if market_cap is not None and market_cap > 0 else None,
+        'total_assets': get('Total Assets'), 'total_equity': equity,
+        'total_liabilities': get('Total Liabilities Net Minority Interest'),
+        'current_assets': get('Current Assets'), 'current_liabilities': get('Current Liabilities'),
+        'net_income': net_income, 'operating_cash_flow': get('Operating Cash Flow'),
+        'capital_expenditure': get('Capital Expenditure'), 'free_cash_flow': fcf,
+        'current_ratio': ratio(get('Current Assets'), get('Current Liabilities')),
+        'quick_ratio': ratio(get('Current Assets') - get('Inventory'), get('Current Liabilities'))
+            if get('Current Assets') is not None and get('Inventory') is not None else None,
+        'debt_to_equity': ratio(debt, equity), 'debt_to_assets': ratio(debt, get('Total Assets')),
+        'roa': ratio(net_income, get('Total Assets')),
+        'interest_coverage': ratio(get('EBIT'), abs(get('Interest Expense')))
+            if get('Interest Expense') is not None else None,
         'net_debt_quote': convert(debt - cash) if debt is not None and cash is not None else None,
         'fcf_quote': convert(fcf), 'debt_quote': convert(debt),
         'interest_expense_quote': convert(abs(get('Interest Expense'))) if get('Interest Expense') is not None else None,
@@ -154,7 +180,7 @@ def screen(snapshots, preset='value', rules=None, fx_rates=None):
                 missing.append(field)
             elif not operators[op](row[field], cutoff):
                 failed.append(field)
-        row.update(symbol=symbol, passed=not failed and not missing,
+        row.update(symbol=symbol, screen=preset, passed=not failed and not missing,
                    failed_rules=','.join(failed), missing_rules=','.join(missing))
         rows.append(row)
     if not rows:

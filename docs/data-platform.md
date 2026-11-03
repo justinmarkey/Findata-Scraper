@@ -15,35 +15,36 @@ SQLite database or older command tree is required.
 | `providers.key_env` | Environment-variable names for OpenBB credentials |
 | `collection` | Datasets, earliest price date, attempts, statement count and worker limit |
 | `screens` | Named screening rules and optional inheritance |
-| `reports` | Screens to include, pick counts, refresh/discovery budgets, freshness limits, times and timezone |
+| `reports` | Screens to include, pick counts, refresh/discovery budgets, freshness policy and display timezone |
 | `valuation` | DCF growth, terminal growth, years, risk-free/market returns and tax rate |
 | `insiders` | Cluster window, distinct-insider count, trade value, price move and currency |
-| `cloud` | Remote state key, delivery receipts, storage region and SMTP connection |
+| `cloud` | Legacy remote-state settings; unused by local reports |
 
 Use `--config /path/to/settings.toml` **before** the subcommand to select a different
 configuration. CLI overrides, such as `--start` and `--financial-source`, take priority
 over the corresponding public setting. `FINDATA_CONFIG` is another optional override.
 Relative storage paths are resolved against the project root.
 
-Copy `.env.example` to `.env` and fill values locally. The local file is ignored by Git
-and has owner-only permissions when created by this project setup. Existing process
+Copy `.env.example` to `.env` and fill values locally. The local file is ignored by Git. Existing process
 and CI environment variables take priority over `.env`. Do not commit or paste the
 populated file, tokens, passwords or storage credentials into chat.
 
-Important variables:
+Local report settings (all optional when reading an existing database):
 
 - `REPORT_TO`: destination address or comma-separated addresses.
-- `SMTP_USERNAME`, `SMTP_PASSWORD`: email sender and SMTP app password.
+- `SMTP_USERNAME`, `SMTP_PASSWORD`: only needed by legacy SMTP delivery, not report generation.
 - `FMP_API_KEY`, `INTRINIO_API_KEY`, `ALPHA_VANTAGE_API_KEY`: optional OpenBB keys.
 - `SEC_USER_AGENT`: application name and real contact email for direct SEC requests.
-- `FINDATA_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: private cloud state.
-- `AWS_DEFAULT_REGION`, `S3_ENDPOINT_URL`: optional storage routing.
+- `FINDATA_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`: legacy cloud state only.
+- `AWS_DEFAULT_REGION`, `S3_ENDPOINT_URL`: legacy cloud routing only.
 
 OpenBB credentials are set in memory for the selected provider; they are not written
 into public settings or provider archives. Empty keys are allowed for public sources.
 Changing a source does not grant access to a paid provider or silently fall back to a
-free source. Price and profile adapters currently support yfinance only; statement
-and calendar sources can be selected from the supported OpenBB providers.
+free source. Prices support `openbb:yfinance` (default) and direct `yfinance`; profiles use direct
+Yahoo metadata for business descriptions and market capitalization. Financial statements
+and earnings calendars use explicitly selected OpenBB providers. No OpenBB account is
+required for the configured public feeds.
 
 ## Configuring screeners
 
@@ -163,7 +164,7 @@ additional source/filing work. Collection time is not automatically publication 
 .venv/bin/python -m findata earnings-changes
 .venv/bin/python -m findata screen --preset value_pe
 .venv/bin/python -m findata dcf --symbols AAPL MSFT
-.venv/bin/python -m findata report --refresh
+.venv/bin/python -m findata report
 .venv/bin/python -m findata export financials --output data/reports/financials.parquet
 .venv/bin/python -m findata export prices --symbol AAPL --output data/reports/aapl.parquet
 ```
@@ -176,7 +177,8 @@ assumed cancellation. Calendar EPS may use a different basis from statement EPS.
 
 Reports contain the configured top picks, qualifying values, business/product summaries,
 next known earnings, freshness gaps and changes since the last confirmed delivery.
-They exclude stale statements and market data from current picks. `max_refresh` bounds
+They include older matches with explicit freshness warnings by default. Set
+`reports.include_stale = false` to exclude those matches from the shortlist. `max_refresh` bounds
 revalidation; `discovery_per_run` reserves part of that budget for unseen universe
 symbols. Run the full backfill separately: the digest is not a fresh full-universe scan.
 Company summaries are vendor descriptions, not audited product revenue breakdowns.
@@ -194,22 +196,31 @@ Missing required debt, cash, shares, beta or interest data is reported as skippe
 WACC must exceed terminal growth. Provider FCF is a proxy rather than a reconstruction
 of unlevered FCFF; review the model assumptions before treating estimates as valuations.
 
-## Cloud delivery while the computer is off
+## Local reports and portability
 
-The prepared GitHub Actions workflow runs on hosted Linux, stores private persistent
-state in S3-compatible storage and sends through SMTP. It does not need the desktop
-app, an open browser or a Gmail plugin connection. **It is not deployed or active yet.**
+Use `python -m findata report` to read the stored database without network refresh or
+email delivery. Each run writes HTML, plain text, a multipart `.eml` email draft,
+shortlist CSV/Parquet, complete screening CSV/Parquet, and JSON metadata. No recipient,
+SMTP password or cloud account is required to generate a report. The full screening
+exports include failed/missing rules and freshness warnings, including companies that
+do not appear in the top picks. Statement periods, quote timestamps and collection
+times are separate from the report-generation timestamp. Unknown dates remain unknown.
 
-The default schedule is 07:30 and 20:00 `America/New_York`, including weekends and DST.
-After changing report times/timezone in the settings file, synchronize and publish the
-workflow:
+Copy the whole lake directory with its manifest, raw observations and normalized
+Parquet after stopping collection. On another machine, install the same project and
+run `python -m findata --root /absolute/path/to/lake report`. New reports go into
+microsecond-stamped directories, so multiple manual runs on the same day are retained.
+`report --output /path` explicitly reuses that destination. Creating a draft never
+marks it as delivered; the optional legacy delivery marker requires confirmation.
 
-```sh
-.venv/bin/python -m findata sync-schedule
-```
+The checked-in scheduled workflow has been removed. Publish the deletion to the
+default branch to stop the existing GitHub schedule, or disable it in GitHub Actions.
 
-GitHub can delay scheduled starts, and report generation/SMTP acceptance take time;
-these are scheduled run times, not an exact-minute inbox delivery guarantee.
+## Legacy cloud utilities (optional, unused by local reports)
+
+The `findata.cloud` module is retained for existing integrations. There is no longer
+a checked-in workflow or a schedule-sync CLI command. Local reports do not invoke
+this module, need S3, or require the following credentials.
 
 Configure these repository secrets before activation:
 
@@ -236,8 +247,8 @@ in the environment:
 .venv/bin/python -m findata.cloud --seed --data-dir data
 ```
 
-Publish the reviewed workflow to the default branch, run a manual `dry_run=true`
-preview, then test a real delivery. The archive contains only the new lake. It does not
+If reintroducing cloud deployment, supply your own workflow and test a dry-run
+preview before real delivery. The archive contains only the new lake. It does not
 include `.env`. SQLite index backups are consistent. Delivery receipts prevent duplicate
 editions; an ambiguous pending send stops automatic retries until sent-mail/provider
 logs are checked. SMTP acceptance does not guarantee final inbox placement.
@@ -246,3 +257,33 @@ References: [OpenBB earnings](https://docs.openbb.co/odp/v4/python/reference/equ
 [SEC APIs](https://www.sec.gov/search-filings/edgar-application-programming-interfaces),
 [GitHub schedules](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onschedule),
 [Google app passwords](https://support.google.com/accounts/answer/185833).
+
+Additional screen fields include `total_assets`, `total_equity`, `total_liabilities`,
+`current_assets`, `current_liabilities`, `net_income`, `operating_cash_flow`,
+`capital_expenditure`, `free_cash_flow`, `current_ratio`, `quick_ratio`,
+`debt_to_equity`, `debt_to_assets`, `roa`, and `interest_coverage`. Ratios use
+annual/TTM flows and same-period balance-sheet amounts. ROA/ROE use ending balances,
+not average balances. Quick ratio is (current assets - inventory) / current liabilities;
+interest coverage is EBIT / absolute interest expense. Missing inputs stay unavailable.
+
+## Trading below cash
+
+The `under_cash` screen is included in reports and requires `price_to_cash < 1.0`.
+Run it alone with `python -m findata screen --preset under_cash`. The calculation is
+market capitalization / cash and cash equivalents converted to the quote currency.
+For aligned share units this is equivalent to price / cash per share. It compares
+company value with company cash, rather than one share's price with total cash.
+
+This screen uses the newest available annual or quarterly cash balance from the
+selected financial source, even when four quarters of income/cash-flow data are not
+available. `cash_period_end` records that balance's date; `latest_cash` is its amount
+in reporting currency and `cash_quote` is the currency-converted amount. Cash is
+never summed across quarters. Debt is not deducted and short-term investments are
+not added. Missing/nonpositive cash or market capitalization cannot pass. Unknown
+or mismatched currencies require explicit FX conversion before a ratio is available.
+
+The report displays P/C, the cash balance date and the available quote timestamp.
+A stored quote is not automatically today's price. Refresh company metadata before
+using the screen for a current-price comparison; financial balances remain as of the
+reported balance-sheet date. This is a research filter: debt, liabilities, cash burn
+and restrictions on cash still matter when assessing a company.

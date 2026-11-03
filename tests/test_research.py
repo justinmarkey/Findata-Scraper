@@ -43,6 +43,27 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(load_snapshots(self.lake), {})
         self.assertFalse((Path(self.temp.name) / 'findata.sqlite3').exists())
 
+    def test_openbb_balance_and_cash_fields_produce_ratios(self):
+        values = {'total_revenue': 200, 'net_income': 20, 'total_equity': 100,
+                  'total_assets': 250, 'total_liabilities': 150, 'total_debt': 50,
+                  'total_current_assets': 80, 'total_current_liabilities': 40, 'inventory': 20,
+                  'net_cash_from_operating_activities': 40,
+                  'purchase_of_plant_property_and_equipment': 10, 'ebit': 30,
+                  'total_interest_expense': 5}
+        rows = [{'symbol': 'X', 'source': 'openbb:sec', 'frequency': 'annual',
+                 'statement': 'combined', 'metric': key, 'value': value,
+                 'period_end': '2025-12-31', 'currency': 'USD'} for key, value in values.items()]
+        self.lake.write('financials', 'X', 'openbb:sec', {}, rows)
+        result = metrics(load_snapshots(self.lake)['X'])
+        self.assertEqual(result['current_ratio'], 2)
+        self.assertEqual(result['quick_ratio'], 1.5)
+        self.assertEqual(result['debt_to_equity'], .5)
+        self.assertEqual(result['debt_to_assets'], .2)
+        self.assertEqual(result['roa'], .08)
+        self.assertEqual(result['interest_coverage'], 6)
+        self.assertEqual(result['free_cash_flow'], 30)
+        self.assertIsNone(result['price_to_earnings'])
+
 
 if __name__ == '__main__':
     unittest.main()

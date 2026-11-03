@@ -42,10 +42,8 @@ def main(argv=None):
     earnings.add_argument('--source', default=sources['earnings'])
     earnings.add_argument('--attempts', type=int, default=collection['attempts'])
     sub.add_parser('status')
-    schedule = sub.add_parser('sync-schedule', help='Update cloud schedule from the report settings')
-    schedule.add_argument('--workflow', type=Path, default=ROOT / '.github/workflows/screener-digest.yml')
-    report = sub.add_parser('report', help='Build a screener digest with business descriptions')
-    report.add_argument('--refresh', action='store_true')
+    report = sub.add_parser('report', help='Create local HTML, email draft, CSV and Parquet from stored data')
+    report.add_argument('--refresh', action='store_true', help='Opt in to bounded network collection using configured providers')
     report.add_argument('--refresh-limit', type=int)
     report.add_argument('--output', type=Path)
     for name in ['screen', 'dcf']:
@@ -78,15 +76,13 @@ def main(argv=None):
     export.add_argument('--output', type=Path, required=True)
     args = p.parse_args(argv)
     lake = Lake(args.root)
-    if args.command == 'sync-schedule':
-        from .scheduling import sync_schedule
-        sync_schedule(settings, args.workflow)
-        print('Cloud workflow schedule updated; publish the workflow to activate changes.')
-    elif args.command == 'report':
+    if args.command == 'report':
         from .reporting import build_report
         path = build_report(lake, config_path=known.config, refresh=args.refresh,
                             refresh_limit=args.refresh_limit, output=args.output)
-        print(json.dumps({'message': str(path)}))
+        print(json.dumps({'message': str(path.resolve()), 'html': str((path.parent / 'report.html').resolve()),
+                          'email': str((path.parent / 'report.eml').resolve()),
+                          'screening': str((path.parent / 'screening.parquet').resolve())}))
     elif args.command == 'mark-delivered':
         from .reporting import mark_delivered
         mark_delivered(lake, args.message, args.gmail_message_id)

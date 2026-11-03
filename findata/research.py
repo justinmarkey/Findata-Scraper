@@ -26,6 +26,10 @@ ALIASES = {
     'basiceps': 'Basic EPS', 'dilutedeps': 'Diluted EPS',
     'weightedavebasicsharesos': 'Basic Average Shares',
     'weightedavedilutedsharesos': 'Diluted Average Shares',
+    'totalcurrentassets': 'Current Assets', 'totalcurrentliabilities': 'Current Liabilities',
+    'inventories': 'Inventory', 'totalcashandcashequivalents': 'Cash And Cash Equivalents',
+    'netcashprovidedbyoperatingactivities': 'Operating Cash Flow',
+    'purchaseofpropertyplantandequipment': 'Capital Expenditure',
 }
 ALIASES.update(CANONICAL)
 

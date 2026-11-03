@@ -23,6 +23,37 @@ def snapshot(currency='USD'):
 
 
 class PipelineTests(unittest.TestCase):
+    def test_under_cash_uses_latest_balance_and_strict_threshold(self):
+        s = snapshot()
+        s['quarterly'] = {'Cash And Cash Equivalents': {'2026-09-30': 200}}
+        m = metrics(s)
+        self.assertEqual(m['cash_period_end'], '2026-09-30')
+        self.assertEqual(m['latest_cash'], 200)
+        self.assertEqual(m['price_to_cash'], .75)
+        self.assertTrue(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+        s['info']['marketCap'] = 200
+        self.assertFalse(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+        s['info']['marketCap'] = 201
+        self.assertFalse(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+        s['annual'] = {}
+        s['info']['marketCap'] = 150
+        self.assertTrue(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+
+    def test_under_cash_rejects_invalid_inputs_and_handles_fx(self):
+        for balance in (None, 0, -10):
+            s = snapshot()
+            s['annual']['Cash And Cash Equivalents'] = {'2025-12-31': balance}
+            self.assertIsNone(metrics(s)['price_to_cash'])
+            self.assertFalse(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+        for cap in (None, 0, -10):
+            s = snapshot()
+            s['info']['marketCap'] = cap
+            self.assertIsNone(metrics(s)['price_to_cash'])
+        s = snapshot('EUR')
+        self.assertIsNone(metrics(s)['price_to_cash'])
+        self.assertFalse(screen({'X': s}, 'under_cash').iloc[0]['passed'])
+        self.assertEqual(metrics(s, fx_rate=5)['price_to_cash'], .75)
+
     def test_currency_missing_values_and_pe(self):
         m = metrics(snapshot('EUR'))
         self.assertIsNone(m['fcf_yield'])

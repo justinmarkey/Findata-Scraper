@@ -140,9 +140,27 @@ class LakeTests(unittest.TestCase):
     def test_explicit_date_window_and_sources(self):
         with patch('findata.providers.prices', return_value=({}, [self.price('2025-01-01', 10)])) as prices:
             backfill(self.lake, ['X'], datasets=['prices'], start='2025-01-01', end='2025-01-05')
-            prices.assert_called_once_with('X', '2025-01-01', '2025-01-05', 'yfinance')
+            prices.assert_called_once_with('X', '2025-01-01', '2025-01-05', 'openbb:yfinance')
         with self.assertRaises(ValueError):
             backfill(self.lake, ['X'], start='2025-01-05', end='2025-01-01')
+
+    def test_openbb_prices_preserve_adjustments_and_bound_dates(self):
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+        from findata.providers import prices
+        records = [{'date': '2025-06-30', 'close': 101, 'adj_close': 98, 'currency': 'USD'},
+                   {'date': '2025-07-01', 'close': 102}]
+        historical = Mock(return_value=SimpleNamespace(results=[
+            SimpleNamespace(model_dump=lambda value=value, **_: value) for value in records]))
+        obb = SimpleNamespace(equity=SimpleNamespace(price=SimpleNamespace(historical=historical)))
+        with patch('findata.settings.openbb_client', return_value=obb):
+            raw, rows = prices('BRK.B', '2025-06-01', '2025-06-30', 'openbb:yfinance')
+        self.assertEqual(len(raw), 2)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['source'], 'openbb:yfinance')
+        self.assertEqual(rows[0]['adj_close'], 98)
+        self.assertEqual(historical.call_args.kwargs['symbol'], 'BRK-B')
+        self.assertEqual(historical.call_args.kwargs['adjustment'], 'splits_only')
 
 
 if __name__ == '__main__':

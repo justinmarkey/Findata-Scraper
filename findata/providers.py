@@ -169,6 +169,23 @@ def snapshot_rows(symbol, raw, source='yfinance'):
 
 def prices(symbol, start, end, source='yfinance'):
     """Inclusive requested dates. Preserve provider split-adjusted OHLC and separate Adj Close."""
+    if source == 'openbb:yfinance':
+        from .settings import openbb_client
+        result = openbb_client().equity.price.historical(
+            symbol=symbol.replace('.', '-'), start_date=start,
+            end_date=(date.fromisoformat(end) + timedelta(days=1)).isoformat(),
+            interval='1d', provider='yfinance', adjustment='splits_only', include_actions=True)
+        records = [item.model_dump(mode='json') for item in result.results or []]
+        rows = []
+        for item in records:
+            stamp = str(item['date'])[:10]
+            if not start <= stamp <= end:
+                continue
+            rows.append(dict(item, symbol=symbol, source=source, date=stamp,
+                             adjustment='provider_split_adjusted'))
+        if not rows:
+            raise ValueError(f'{symbol}: no OpenBB prices in requested interval')
+        return clean(records), clean(rows)
     if source != 'yfinance':
         raise ValueError('Price adapter currently supports yfinance; sources never silently fall back')
     import yfinance as yf

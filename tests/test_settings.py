@@ -31,6 +31,7 @@ class SettingsTests(unittest.TestCase):
             workflow.write_text('on:\n  schedule:\n    # BEGIN CONFIGURED SCHEDULE\n    # END CONFIGURED SCHEDULE\n')
             settings = load_settings()
             settings['reports']['morning_time'] = '08:15'
+            settings['reports']['evening_time'] = '20:00'
             sync_schedule(settings, workflow)
             self.assertIn("cron: '15 8 * * *'", workflow.read_text())
             self.assertIn('timezone: America/New_York', workflow.read_text())

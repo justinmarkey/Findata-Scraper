@@ -1,65 +1,114 @@
 # Findata
 
-A configurable US-equity research pipeline for historical financial statements,
-reported earnings, daily prices, company profiles, screeners, DCF estimates, and
-morning/evening email reports.
-
-Financial data is stored as compressed JSON observations and typed Parquet tables.
-There is one application entry point: `python -m findata`.
+A local US-equity research database and on-demand screener report. Collect financial
+statements with OpenBB, store observations in JSON/Parquet, then run screeners against
+your database. No GitHub schedule, cloud storage, or paid data key is required.
 
 ## Setup
 
+Use Python 3.11 or newer (Python 3.13 is supported):
+
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install -e '.[openbb,universe,cloud]'
-cp .env.example .env
+.venv/bin/python -m pip install -e '.[openbb]'
 ```
 
-Edit **[config/settings.toml](config/settings.toml)** for provider choices, collection
-settings, screener ratios, DCF assumptions, report limits and times. Edit **`.env`**
-for recipient addresses, API keys and cloud/email credentials. `.env` is ignored by
-Git; **[.env.example](.env.example)** is the committed template. Do not overwrite a
-populated `.env` when repeating setup.
+Copy `.env.example` to `.env` if you do not already have one. Set `SEC_USER_AGENT`
+to your application name and real contact email for direct SEC access. `REPORT_TO`
+is optional and fills in the recipient of the generated email draft. Creating and
+reading reports requires no SMTP credentials. `.env` is ignored by Git.
 
-## Build the databases
+Edit [config/settings.toml](config/settings.toml) for collection sources, screening
+rules, ranking, report size and freshness policy. Defaults use OpenBB/SEC for income,
+balance-sheet and cash-flow statements, OpenBB/Yahoo for historical prices, Yahoo for
+rich company profiles, and OpenBB/Nasdaq for the optional earnings calendar. No paid
+provider credentials are needed for these defaults.
+
+## Build or update your database
 
 ```sh
-# Start with a small provider/coverage check.
-.venv/bin/python -m findata build --symbols AAPL MSFT TSM ZIM --start 2000-01-01
+# Start with a small coverage check.
+.venv/bin/python -m findata build --symbols AAPL MSFT --start 2000-01-01
 
-# Build the full configured US universe and all configured datasets.
+# Build the configured US universe, or resume stored collection jobs.
 .venv/bin/python -m findata build
-
-# Resume collection without downloading the universe again.
 .venv/bin/python -m findata backfill
 .venv/bin/python -m findata status
 
-# Collect historical or upcoming earnings events separately.
-.venv/bin/python -m findata earnings --start 2025-01-01 --end 2025-12-31
+# Explicitly update stored statements and company/market metadata.
+.venv/bin/python -m findata backfill --datasets financials profiles --refresh
+
+# Optional earnings calendar.
+.venv/bin/python -m findata earnings
 ```
 
-Collection is resumable. Provider gaps are recorded as partial/failed jobs, and
-non-USD reporters are retained. Historical depth and delisted-stock coverage depend
-on the source; a complete stock-universe backtest needs additional coverage work.
+Collection is resumable and records provider gaps. Public sources can throttle requests
+or have missing statements; report generation works with the stored data without
+contacting those services. A report does not automatically update your database.
 
-## Screen and report
+## Generate a local report
+
+```sh
+.venv/bin/python -m findata report
+
+# Use a database copied from another machine.
+.venv/bin/python -m findata --root /path/to/copied/lake report
+
+# Choose an output folder, or explicitly request a bounded provider refresh first.
+.venv/bin/python -m findata report --output data/reports/my-report
+.venv/bin/python -m findata report --refresh --refresh-limit 20
+```
+
+The command prints absolute output paths. Each default run creates a timestamped
+folder under `data/lake/reports/` containing:
+
+| File | Use |
+| --- | --- |
+| `report.html` | Open in any browser to read the report |
+| `report.eml` | Email draft with plain-text and HTML versions; open in a compatible mail client |
+| `report.txt` | Plain-text report |
+| `shortlist.csv`, `shortlist.parquet` | Top ranked matches for each configured screen |
+| `screening.csv`, `screening.parquet` | Every evaluated company/screen, metrics, failed/missing rules and freshness warnings |
+| `message.json` | Report metadata, source/data dates and email content |
+
+Reports show the run timestamp separately from statement period ends, financial-data
+collection times, quote timestamps and market-metadata collection times. Historical
+matches are included with warnings by default so you can inspect an older database.
+Set `reports.include_stale = false` to exclude them from the shortlist. All evaluated
+rows remain available in `screening.parquet`. Missing values never pass screening rules.
+An empty database produces an explicitly empty report; populate or copy the lake first.
+
+Generating a report does not send mail. You can read the HTML without an email account,
+or review/send the `.eml` draft using your own mail client. There is no automatic cadence.
+
+## Screen, analyze and export
 
 ```sh
 .venv/bin/python -m findata screen --preset value_pe
+.venv/bin/python -m findata screen --preset under_cash
 .venv/bin/python -m findata dcf --symbols AAPL MSFT
-.venv/bin/python -m findata report --refresh
 .venv/bin/python -m findata export financials --output data/reports/financials.parquet
-.venv/bin/python -m findata export prices --symbol AAPL --output data/reports/aapl.parquet
-.venv/bin/python -m findata export profiles --output data/reports/profiles.parquet
+.venv/bin/python -m findata export prices --symbol AAPL --output data/reports/prices.parquet
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-For example, the optional `value_pe` screen inherits the value rules and adds a
-P/E ceiling. Change its `threshold = 20.0` in the settings file to adjust the ceiling,
-or add/remove rules and include that screen in `reports.screens`. No code change is
-needed. Missing data never silently becomes zero or passes a rule.
+Stored statements retain all numeric fields returned by the provider. Screen metrics
+include P/E, P/S, P/B, FCF yield, margins, ROE, ROA, current/quick ratios, debt/equity,
+debt/assets and interest coverage, plus balance-sheet and cash-flow amounts. Ratios
+are calculated transparently from stored statements and market metadata, rather than
+requiring a paid vendor-ratios feed. Currency-dependent ratios stay unavailable when
+reporting and quote currencies do not align.
 
-The [data and deployment guide](docs/data-platform.md) covers schemas, sources,
-configuration, screen definitions, currency handling and cloud email setup.
-Cloud email delivery is prepared but is **not deployed or active** until the required
-accounts/secrets, initial data upload and workflow publication are completed.
+The default report also includes **Trading below cash**: market capitalization divided
+by the latest reported cash and cash equivalents must be strictly below 1. The report
+shows P/C, the cash balance date and available quote timestamp. This uses gross cash
+before debt, excludes short-term investments, and never treats missing cash as zero.
+
+To move between machines, copy the **entire `data/lake` directory**, including
+`manifest.sqlite3`, `raw/`, and `normalized/`, after collection has stopped. Copying
+only the SQLite manifest is insufficient. Install Findata on the destination machine
+and point `--root` at that directory. The recipient and timezone can be configured there.
+
+The [data and deployment guide](docs/data-platform.md) describes source coverage,
+calculation details and legacy cloud utilities. The scheduled GitHub workflow has been
+removed; that removal takes effect on GitHub once these changes reach the default branch.

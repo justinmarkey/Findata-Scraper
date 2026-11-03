@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "findata-research"
 version = "0.2.0"
-description = "Auditable US equity financial, price and earnings history"
+description = "Local OpenBB financial database, screeners and on-demand HTML/email reports"
 requires-python = ">=3.11"
 dependencies = ["pandas>=2.2,<4", "pyarrow>=18", "duckdb>=1.2", "requests>=2.32", "yfinance>=0.2.66", "python-dotenv>=1.0"]
 
 [project.optional-dependencies]
 cloud = ["boto3>=1.36"]
-openbb = ["openbb>=4,<5", "openbb-nasdaq", "openbb-fmp", "openbb-yfinance", "openbb-sec"]
+openbb = ["openbb>=4,<5", "openbb-nasdaq<2", "openbb-yfinance<2", "openbb-sec<2"]
 universe = ["financedatabase>=2"]
 analytics = ["financetoolkit>=2"]
 

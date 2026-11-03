@@ -6,7 +6,7 @@ root = "data/lake"
 [providers]
 universe = "nasdaq"
 financials = "openbb:sec"
-prices = "yfinance"
+prices = "openbb:yfinance"
 profiles = "yfinance"
 earnings = "openbb:nasdaq"
 
@@ -26,7 +26,7 @@ workers = 2
 [reports]
 recipient_env = "REPORT_TO"
 timezone = "America/New_York"
-screens = ["value", "deep_value", "buffett_user", "multibagger"]
+screens = ["value", "deep_value", "buffett_user", "multibagger", "under_cash"]
 top_per_screen = 3
 rank_by = ["fcf_yield", "book_to_market"]
 rank_descending = [true, true]
@@ -36,8 +36,7 @@ discovery_per_run = 10
 max_quote_age_days = 7
 max_statement_age_days = 550
 profile_max_characters = 700
-morning_time = "07:30"
-evening_time = "20:00"
+include_stale = true  # Include stored historical matches, with explicit freshness warnings.
 
 [screens.value]
 label = "Value"
@@ -54,6 +53,11 @@ rules = [
 label = "Value with P/E ceiling"
 extends = "value"
 rules = [{metric = "price_to_earnings", op = "<", threshold = 20.0}]
+
+[screens.under_cash]
+label = "Trading below cash (P/C < 1)"
+# Gross cash and cash equivalents, without deducting debt. Currency-aligned.
+rules = [{metric = "price_to_cash", op = "<", threshold = 1.0}]
 
 [screens.deep_value]
 label = "Debt-free deep value"
@@ -98,6 +102,7 @@ min_value = 100000.0
 move_threshold = 0.15
 currency = "USD"
 
+# Legacy cloud runner settings; local reports never use these.
 [cloud]
 state_key = "findata/state.tar.gz"
 receipt_prefix = "findata/deliveries"

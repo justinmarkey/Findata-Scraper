@@ -126,7 +126,7 @@ def run(data_dir, *, seed=False, dry_run=False):
         unpack_state(archive, data_dir)
         lake = Lake(data_dir / 'lake')
         message_path = build_report(lake, refresh=True,
-                                    output=data_dir / 'reports/cloud-digest')
+                                    output=data_dir / 'reports/cloud-digest', delivery_scope='session')
         message = json.loads(message_path.read_text())
         if dry_run:
             return {'status': 'preview', 'message': str(message_path)}

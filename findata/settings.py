@@ -43,7 +43,7 @@ def load_settings(path=None):
     if settings.get('schema_version') != 1:
         raise ValueError('Unsupported settings schema_version')
     from .screening import metrics
-    numeric_fields = set(metrics({})) - {'period_end', 'observed_at', 'flow_basis', 'source',
+    numeric_fields = set(metrics({})) - {'period_end', 'cash_period_end', 'observed_at', 'flow_basis', 'source',
                                         'reporting_currency', 'quote_currency'}
     for name in settings['screens']:
         for field, _, _ in screen_rules(settings, name):
@@ -55,12 +55,14 @@ def load_settings(path=None):
         raise ValueError('Invalid reports.rank_by / reports.rank_descending')
     if not settings['reports']['screens']:
         raise ValueError('reports.screens must contain at least one screen')
+    if type(settings['reports'].get('include_stale', False)) is not bool:
+        raise ValueError('reports.include_stale must be true or false')
     for field in ['attempts', 'statement_limit', 'workers']:
         value = settings['collection'][field]
         if isinstance(value, bool) or not isinstance(value, int) or value < 1:
             raise ValueError(f'collection.{field} must be a positive integer')
-    if settings['providers']['prices'] != 'yfinance' or settings['providers']['profiles'] != 'yfinance':
-        raise ValueError('The current price and profile adapters support yfinance only')
+    if settings['providers']['prices'] not in ('yfinance', 'openbb:yfinance') or settings['providers']['profiles'] != 'yfinance':
+        raise ValueError('Prices support yfinance or openbb:yfinance; profiles support yfinance')
     for name in settings['reports']['screens']:
         if name not in settings['screens']:
             raise ValueError(f'Report refers to unknown screen: {name}')
@@ -75,7 +77,8 @@ def load_settings(path=None):
     ZoneInfo(settings['reports']['timezone'])
     for field in ['morning_time', 'evening_time']:
         from datetime import time
-        time.fromisoformat(settings['reports'][field])
+        if field in settings['reports']:
+            time.fromisoformat(settings['reports'][field])
     return settings
 
 
